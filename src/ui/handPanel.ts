@@ -86,6 +86,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     };
     wrap.addEventListener("pointerup", (e) => {
       const dy = e.clientY - startY;
+      console.log("[cardplay] pointerup", defId, "dy=", dy);
       cancelGesture();
       if (dy < -40) {
         playCardWithEffect(defId, wrap);
@@ -96,8 +97,9 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     wrap.addEventListener("pointercancel", cancelGesture);
 
     function playCardWithEffect(cardId: string, source: HTMLElement): void {
-      if ((source as any)._playing) return;
+      if ((source as any)._playing) { console.log("[cardplay] already playing, skip", cardId); return; }
       (source as any)._playing = true;
+      console.log("[cardplay] start", cardId);
       const def = getCard(cardId);
       const rootRect = root.getBoundingClientRect();
       const srcRect = source.getBoundingClientRect();
@@ -130,6 +132,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
       const finish = () => {
         if (done) return;
         done = true;
+        console.log("[cardplay] finish", cardId);
         try { moveAnim.cancel(); } catch {}
         try { if (blast) blast.remove(); } catch {}
         float.remove();
@@ -138,6 +141,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
       };
       let blast: HTMLDivElement | null = null;
       const startBlast = () => {
+        console.log("[cardplay] startBlast", cardId);
         float.style.left = targetLeft + "px";
         float.style.top = targetTop + "px";
         float.style.transform = "scale(1)";
@@ -152,13 +156,14 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
         blastAnim.onfinish = finish;
         blastAnim.oncancel = finish;
       };
-      moveAnim.onfinish = startBlast;
-      moveAnim.oncancel = startBlast;
+      moveAnim.onfinish = () => { console.log("[cardplay] move finished", cardId); startBlast(); };
+      moveAnim.oncancel = () => { console.log("[cardplay] move cancelled", cardId); startBlast(); };
       // safety fallback in case animation events don't fire
       window.setTimeout(() => {
         if (!done) {
+          console.log("[cardplay] fallback move timeout", cardId);
           if (!blast) startBlast();
-          window.setTimeout(finish, 450);
+          window.setTimeout(() => { console.log("[cardplay] fallback finish timeout", cardId); finish(); }, 450);
         }
       }, 320);
     }
