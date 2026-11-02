@@ -34,10 +34,20 @@ export class BattleScene extends Phaser.Scene {
     this.sim.events.on("hero.attack", (e) => {
       const tgt = this.findUnit(e.data.targetId as number);
       if (tgt) this.spawnDamageText(tgt.x, tgt.y, `-${e.data.dmg}`, "#ffff88");
+      const hero = this.sim.state.hero;
+      const hc = this.unitSprites.get(hero.id);
+      if (hc) this.playAttack(hc);
+      const tc = tgt ? this.unitSprites.get(tgt.id) : undefined;
+      if (tc) this.playHit(tc);
     });
     this.sim.events.on("enemy.attack", (e) => {
       const tgt = this.findUnit(e.data.targetId as number);
       if (tgt) this.spawnDamageText(tgt.x, tgt.y, `-${e.data.dmg}`, "#ff8888");
+      const atk = this.findUnit(e.data.attackerId as number);
+      const ac = atk ? this.unitSprites.get(atk.id) : undefined;
+      if (ac) this.playAttack(ac);
+      const tc = tgt ? this.unitSprites.get(tgt.id) : undefined;
+      if (tc) this.playHit(tc);
     });
   }
 
@@ -53,6 +63,16 @@ export class BattleScene extends Phaser.Scene {
     this.tweens.add({ targets: t, y: y - 40, alpha: 0, duration: 600, onComplete: () => t.destroy() });
   }
 
+  playAttack(c: Phaser.GameObjects.Container): void {
+    this.tweens.add({ targets: c, scaleX: 1.25, scaleY: 1.25, duration: 80, yoyo: true, ease: "Quad.easeOut" });
+  }
+
+  playHit(c: Phaser.GameObjects.Container): void {
+    const img = c.list[0] as Phaser.GameObjects.Image;
+    if (img) img.setTint(0xffffff);
+    this.tweens.add({ targets: c, x: c.x + 4, duration: 40, yoyo: true, repeat: 1, onComplete: () => { if (img) { img.clearTint(); } } });
+  }
+
   update(_time: number, delta: number): void {
     const sim = this.sim;
     if (sim.state.phase === "fight") {
@@ -61,6 +81,12 @@ export class BattleScene extends Phaser.Scene {
     }
     this.syncUnits();
     const hero = sim.state.hero;
+    const t = _time / 1000;
+    for (const [id, c] of this.unitSprites) {
+      const bob = Math.sin(t * 6 + id) * 1.5;
+      const u = this.findUnit(id);
+      if (u) c.setY(u.y + bob);
+    }
     this.cameras.main.centerOn(hero.x, hero.y);
   }
 
