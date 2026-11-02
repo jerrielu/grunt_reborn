@@ -1,5 +1,7 @@
 # AGENTS.md
 
+This game is designed for mobile phone in portrait mode.
+
 ## Testing
 
 - Always perform necessary tests, but not excessive tests.
