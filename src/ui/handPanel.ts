@@ -7,7 +7,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
 
   const panel = document.createElement("div");
   panel.id = "hand-panel";
-  panel.style.cssText = "position:absolute;left:0;right:0;bottom:0;height:20%;background:linear-gradient(180deg,#5a3a1a 0%,#3a2410 100%);color:#fff;font-family:monospace;z-index:9;display:flex;align-items:center;justify-content:space-between;padding:4px 8px;box-sizing:border-box;border-top:2px solid #2a1a08;overflow:hidden;";
+  panel.style.cssText = "position:absolute;left:0;right:0;bottom:0;height:10%;background:linear-gradient(180deg,#5a3a1a 0%,#3a2410 100%);color:#fff;font-family:monospace;z-index:9;display:flex;align-items:center;justify-content:space-between;padding:4px 8px;box-sizing:border-box;border-top:2px solid #2a1a08;overflow:hidden;";
   root.appendChild(panel);
 
   // desk texture lines
@@ -95,12 +95,17 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     // fan layout
     const cards = s.deck;
     const n = cards.length;
-    const fanSpread = Math.min(20, 120 / Math.max(1, n));
+    const cardW = 52;
+    const overlap = Math.max(16, cardW - (handArea.clientWidth - 20) / Math.max(1, n));
     cards.forEach((inst, i) => {
       const el = makeCard(inst.defId);
-      const angle = (i - (n - 1) / 2) * fanSpread;
+      el.style.position = "absolute";
+      el.style.left = `${i * (cardW - overlap)}px`;
+      el.style.bottom = "0";
+      const angle = (i - (n - 1) / 2) * 6;
       el.style.transform = `rotate(${angle}deg)`;
       el.style.transformOrigin = "bottom center";
+      el.style.zIndex = String(i);
       handArea.appendChild(el);
     });
 
