@@ -16,11 +16,11 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
   panel.appendChild(desk);
 
   const handArea = document.createElement("div");
-  handArea.style.cssText = "position:relative;flex:1;display:flex;align-items:flex-end;justify-content:flex-start;height:100%;";
+  handArea.style.cssText = "position:relative;flex:0 0 80%;display:flex;align-items:flex-end;justify-content:flex-start;height:100%;overflow:visible;";
   panel.appendChild(handArea);
 
   const deckArea = document.createElement("div");
-  deckArea.style.cssText = "position:relative;width:60px;height:100%;display:flex;align-items:center;justify-content:center;";
+  deckArea.style.cssText = "position:relative;flex:0 0 20%;height:100%;display:flex;align-items:center;justify-content:center;";
   panel.appendChild(deckArea);
 
   let preview: HTMLElement | null = null;
