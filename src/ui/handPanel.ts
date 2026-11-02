@@ -27,6 +27,9 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
   panel.appendChild(deckArea);
 
   let preview: HTMLElement | null = null;
+  let isDragging = false;
+  let pendingRender = false;
+  let dragState: { defId: string; startY: number; el: HTMLElement; moved: boolean } | null = null;
 
   function closePreview() {
     if (preview) { preview.remove(); preview = null; }
@@ -54,6 +57,78 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     preview = overlay;
   }
 
+  function playCardWithEffect(cardId: string, source: HTMLElement): void {
+    if ((source as any)._playing) { console.log("[cardplay] already playing, skip", cardId); return; }
+    (source as any)._playing = true;
+    console.log("[cardplay] start", cardId);
+    const def = getCard(cardId);
+    let srcRect: DOMRect;
+    try { srcRect = source.getBoundingClientRect(); } catch { srcRect = new DOMRect(0, 0, 62, 94); }
+    const rootRect = root.getBoundingClientRect();
+    const float = document.createElement("div");
+    float.style.cssText = "position:absolute;z-index:20;pointer-events:none;display:flex;flex-direction:column;align-items:center;";
+    const canvas = renderCardCanvas(cardId);
+    const img = document.createElement("img");
+    img.src = canvas.toDataURL("image/png");
+    img.style.cssText = "width:192px;height:288px;image-rendering:pixelated;border:2px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.8);";
+    float.appendChild(img);
+    const label = document.createElement("div");
+    label.style.cssText = "margin-top:6px;font-size:12px;color:#fff;text-align:center;max-width:220px;";
+    label.textContent = def ? def.name + " — " + def.description : cardId;
+    float.appendChild(label);
+    const startLeft = srcRect.left - rootRect.left;
+    const startTop = srcRect.top - rootRect.top;
+    float.style.left = startLeft + "px";
+    float.style.top = startTop + "px";
+    float.style.transform = "scale(0.32)";
+    float.style.transformOrigin = "top left";
+    root.appendChild(float);
+
+    const targetLeft = (root.clientWidth - 192) / 2;
+    const targetTop = (root.clientHeight - 288) / 2;
+    const moveAnim = float.animate([
+      { left: startLeft + "px", top: startTop + "px", transform: "scale(0.32)" },
+      { left: targetLeft + "px", top: targetTop + "px", transform: "scale(1)" },
+    ], { duration: 280, easing: "cubic-bezier(0.2,0.8,0.2,1)", fill: "forwards" });
+    let done = false;
+    let blast: HTMLDivElement | null = null;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      console.log("[cardplay] finish", cardId);
+      try { moveAnim.cancel(); } catch {}
+      try { if (blast) blast.remove(); } catch {}
+      float.remove();
+      (source as any)._playing = false;
+      sim.playCard(cardId);
+    };
+    const startBlast = () => {
+      console.log("[cardplay] startBlast", cardId);
+      float.style.left = targetLeft + "px";
+      float.style.top = targetTop + "px";
+      float.style.transform = "scale(1)";
+      float.style.transformOrigin = "";
+      blast = document.createElement("div");
+      blast.style.cssText = "position:absolute;left:50%;top:50%;width:40px;height:40px;margin-left:-20px;margin-top:-20px;border-radius:50%;background:radial-gradient(circle,rgba(255,220,80,0.95),rgba(255,120,0,0.5) 55%,transparent 72%);z-index:21;pointer-events:none;";
+      root.appendChild(blast);
+      const blastAnim = blast.animate([
+        { transform: "scale(0.4)", opacity: 1 },
+        { transform: "scale(7)", opacity: 0 },
+      ], { duration: 420, easing: "ease-out", fill: "forwards" });
+      blastAnim.onfinish = finish;
+      blastAnim.oncancel = finish;
+    };
+    moveAnim.onfinish = () => { console.log("[cardplay] move finished", cardId); startBlast(); };
+    moveAnim.oncancel = () => { console.log("[cardplay] move cancelled", cardId); startBlast(); };
+    window.setTimeout(() => {
+      if (!done) {
+        console.log("[cardplay] fallback move timeout", cardId);
+        if (!blast) startBlast();
+        window.setTimeout(() => { console.log("[cardplay] fallback finish timeout", cardId); finish(); }, 450);
+      }
+    }, 320);
+  }
+
   function makeCard(defId: string): HTMLElement {
     const def = getCard(defId);
     const wrap = document.createElement("div");
@@ -65,114 +140,45 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     wrap.appendChild(img);
 
     // gesture: slide up to play
-    let startY = 0;
-    let moved = false;
     wrap.addEventListener("pointerdown", (e) => {
-      startY = e.clientY;
-      moved = false;
-      wrap.setPointerCapture(e.pointerId);
+      isDragging = true;
+      dragState = { defId, startY: e.clientY, el: wrap, moved: false };
+      try { wrap.setPointerCapture(e.pointerId); } catch {}
       (wrap as any)._origZ = wrap.style.zIndex;
       wrap.style.zIndex = "100";
     });
     wrap.addEventListener("pointermove", (e) => {
-      if (e.clientY < startY - 10) moved = true;
-      if (moved) {
-        wrap.style.transform = `translateY(${e.clientY - startY}px)`;
+      if (!dragState || dragState.el !== wrap) return;
+      if (e.clientY < dragState.startY - 10) dragState.moved = true;
+      if (dragState.moved) {
+        wrap.style.transform = `translateY(${e.clientY - dragState.startY}px)`;
       }
     });
-    const cancelGesture = () => {
+    const finishDrag = (endY: number) => {
+      if (!isDragging || !dragState || dragState.el !== wrap) return;
+      const ds = dragState;
+      const dy = endY - ds.startY;
+      isDragging = false;
+      dragState = null;
       wrap.style.transform = "";
       wrap.style.zIndex = (wrap as any)._origZ ?? "";
-    };
-    wrap.addEventListener("pointerup", (e) => {
-      const dy = e.clientY - startY;
-      console.log("[cardplay] pointerup", defId, "dy=", dy);
-      cancelGesture();
+      console.log("[cardplay] drag end", defId, "dy=", dy, "moved=", ds.moved);
       if (dy < -40) {
         playCardWithEffect(defId, wrap);
       } else {
         showPreview(defId);
       }
-    });
-    wrap.addEventListener("pointercancel", cancelGesture);
-
-    function playCardWithEffect(cardId: string, source: HTMLElement): void {
-      if ((source as any)._playing) { console.log("[cardplay] already playing, skip", cardId); return; }
-      (source as any)._playing = true;
-      console.log("[cardplay] start", cardId);
-      const def = getCard(cardId);
-      const rootRect = root.getBoundingClientRect();
-      const srcRect = source.getBoundingClientRect();
-      const float = document.createElement("div");
-      float.style.cssText = "position:absolute;z-index:20;pointer-events:none;display:flex;flex-direction:column;align-items:center;";
-      const canvas = renderCardCanvas(cardId);
-      const img = document.createElement("img");
-      img.src = canvas.toDataURL("image/png");
-      img.style.cssText = "width:192px;height:288px;image-rendering:pixelated;border:2px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.8);";
-      float.appendChild(img);
-      const label = document.createElement("div");
-      label.style.cssText = "margin-top:6px;font-size:12px;color:#fff;text-align:center;max-width:220px;";
-      label.textContent = def ? def.name + " — " + def.description : cardId;
-      float.appendChild(label);
-      const startLeft = srcRect.left - rootRect.left;
-      const startTop = srcRect.top - rootRect.top;
-      float.style.left = startLeft + "px";
-      float.style.top = startTop + "px";
-      float.style.transform = "scale(0.32)";
-      float.style.transformOrigin = "top left";
-      root.appendChild(float);
-
-      const targetLeft = (root.clientWidth - 192) / 2;
-      const targetTop = (root.clientHeight - 288) / 2;
-      const moveAnim = float.animate([
-        { left: startLeft + "px", top: startTop + "px", transform: "scale(0.32)" },
-        { left: targetLeft + "px", top: targetTop + "px", transform: "scale(1)" },
-      ], { duration: 280, easing: "cubic-bezier(0.2,0.8,0.2,1)", fill: "forwards" });
-      let done = false;
-      const finish = () => {
-        if (done) return;
-        done = true;
-        console.log("[cardplay] finish", cardId);
-        try { moveAnim.cancel(); } catch {}
-        try { if (blast) blast.remove(); } catch {}
-        float.remove();
-        (source as any)._playing = false;
-        sim.playCard(cardId);
-      };
-      let blast: HTMLDivElement | null = null;
-      const startBlast = () => {
-        console.log("[cardplay] startBlast", cardId);
-        float.style.left = targetLeft + "px";
-        float.style.top = targetTop + "px";
-        float.style.transform = "scale(1)";
-        float.style.transformOrigin = "";
-        blast = document.createElement("div");
-        blast.style.cssText = "position:absolute;left:50%;top:50%;width:40px;height:40px;margin-left:-20px;margin-top:-20px;border-radius:50%;background:radial-gradient(circle,rgba(255,220,80,0.95),rgba(255,120,0,0.5) 55%,transparent 72%);z-index:21;pointer-events:none;";
-        root.appendChild(blast);
-        const blastAnim = blast.animate([
-          { transform: "scale(0.4)", opacity: 1 },
-          { transform: "scale(7)", opacity: 0 },
-        ], { duration: 420, easing: "ease-out", fill: "forwards" });
-        blastAnim.onfinish = finish;
-        blastAnim.oncancel = finish;
-      };
-      moveAnim.onfinish = () => { console.log("[cardplay] move finished", cardId); startBlast(); };
-      moveAnim.oncancel = () => { console.log("[cardplay] move cancelled", cardId); startBlast(); };
-      // safety fallback in case animation events don't fire
-      window.setTimeout(() => {
-        if (!done) {
-          console.log("[cardplay] fallback move timeout", cardId);
-          if (!blast) startBlast();
-          window.setTimeout(() => { console.log("[cardplay] fallback finish timeout", cardId); finish(); }, 450);
-        }
-      }, 320);
-    }
+      if (pendingRender) { pendingRender = false; render(); }
+    };
+    wrap.addEventListener("pointerup", (e) => { finishDrag(e.clientY); });
+    wrap.addEventListener("pointercancel", () => { finishDrag(dragState ? dragState.startY : 0); });
 
     wrap.title = def?.description ?? "";
     return wrap;
   }
 
   function render(): void {
+    if (isDragging) { pendingRender = true; console.log("[cardplay] render deferred (dragging)"); return; }
     handArea.innerHTML = "";
     const s = sim.state;
     // fan layout
@@ -213,6 +219,32 @@ const cards = s.deck;
     stack.appendChild(deckLabel);
     deckArea.appendChild(stack);
   }
+
+  // global fallback to finish a drag if the card element was removed mid-drag
+  const onGlobalPointerUp = (e: PointerEvent) => {
+    if (isDragging && dragState) {
+      const el = dragState.el;
+      finishDragAny(e.clientY);
+    }
+  };
+  const finishDragAny = (endY: number) => {
+    if (!isDragging || !dragState) return;
+    const ds = dragState;
+    const wrap = ds.el;
+    const dy = endY - ds.startY;
+    isDragging = false;
+    dragState = null;
+    try { wrap.style.transform = ""; wrap.style.zIndex = (wrap as any)._origZ ?? ""; } catch {}
+    console.log("[cardplay] global drag end", ds.defId, "dy=", dy);
+    if (dy < -40) {
+      playCardWithEffect(ds.defId, wrap);
+    } else {
+      showPreview(ds.defId);
+    }
+    if (pendingRender) { pendingRender = false; render(); }
+  };
+  window.addEventListener("pointerup", onGlobalPointerUp);
+  window.addEventListener("pointercancel", () => { if (isDragging && dragState) finishDragAny(dragState.startY); });
 
   sim.events.on("card.drawn", () => render());
   sim.events.on("card.played", () => render());
