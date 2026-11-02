@@ -3,6 +3,7 @@ import { BootScene } from "./scenes/BootScene";
 import { BattleScene } from "./scenes/BattleScene";
 import { GameController } from "./game";
 import { showMenu } from "./ui/menu";
+import { attachHandPanel } from "./ui/handPanel";
 
 const controller = new GameController();
 
@@ -22,6 +23,7 @@ const game = new Phaser.Game(config);
 
 function startRun(generalId: string): void {
   const sim = controller.startRun(generalId);
+  attachHandPanel(sim, (cardId) => sim.confirmReward(cardId));
   const scene = game.scene.start("BattleScene", { sim });
   const bs = game.scene.getScene("BattleScene") as BattleScene;
   bs.sim.events.on("hero.died", () => {
