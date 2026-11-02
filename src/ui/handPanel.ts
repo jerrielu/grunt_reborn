@@ -85,11 +85,64 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
       wrap.style.transform = "";
       wrap.style.zIndex = (wrap as any)._origZ ?? "";
       if (dy < -40) {
-        sim.playCard(defId);
+        playCardWithEffect(defId, wrap);
       } else {
         showPreview(defId);
       }
     });
+
+    function playCardWithEffect(cardId: string, source: HTMLElement): void {
+      if ((source as any)._playing) return;
+      (source as any)._playing = true;
+      const def = getCard(cardId);
+      const rootRect = root.getBoundingClientRect();
+      const srcRect = source.getBoundingClientRect();
+      const float = document.createElement("div");
+      float.style.cssText = "position:absolute;z-index:20;pointer-events:none;display:flex;flex-direction:column;align-items:center;";
+      const canvas = renderCardCanvas(cardId);
+      const img = document.createElement("img");
+      img.src = canvas.toDataURL("image/png");
+      img.style.cssText = "width:192px;height:288px;image-rendering:pixelated;border:2px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.8);";
+      float.appendChild(img);
+      const label = document.createElement("div");
+      label.style.cssText = "margin-top:6px;font-size:12px;color:#fff;text-align:center;max-width:220px;";
+      label.textContent = def ? def.name + " — " + def.description : cardId;
+      float.appendChild(label);
+      const startLeft = srcRect.left - rootRect.left;
+      const startTop = srcRect.top - rootRect.top;
+      float.style.left = startLeft + "px";
+      float.style.top = startTop + "px";
+      float.style.transform = "scale(0.32)";
+      float.style.transformOrigin = "top left";
+      root.appendChild(float);
+
+      const targetLeft = (root.clientWidth - 192) / 2;
+      const targetTop = (root.clientHeight - 288) / 2;
+      const moveAnim = float.animate([
+        { left: startLeft + "px", top: startTop + "px", transform: "scale(0.32)" },
+        { left: targetLeft + "px", top: targetTop + "px", transform: "scale(1)" },
+      ], { duration: 280, easing: "cubic-bezier(0.2,0.8,0.2,1)", fill: "forwards" });
+      moveAnim.onfinish = () => {
+        float.style.left = targetLeft + "px";
+        float.style.top = targetTop + "px";
+        float.style.transform = "scale(1)";
+        float.style.transformOrigin = "";
+        // magic blast
+        const blast = document.createElement("div");
+        blast.style.cssText = "position:absolute;left:50%;top:50%;width:40px;height:40px;margin-left:-20px;margin-top:-20px;border-radius:50%;background:radial-gradient(circle,rgba(255,220,80,0.95),rgba(255,120,0,0.5) 55%,transparent 72%);z-index:21;pointer-events:none;";
+        root.appendChild(blast);
+        const blastAnim = blast.animate([
+          { transform: "scale(0.4)", opacity: 1 },
+          { transform: "scale(7)", opacity: 0 },
+        ], { duration: 420, easing: "ease-out", fill: "forwards" });
+        blastAnim.onfinish = () => {
+          blast.remove();
+          float.remove();
+          (source as any)._playing = false;
+          sim.playCard(cardId);
+        };
+      };
+    }
 
     wrap.title = def?.description ?? "";
     return wrap;
