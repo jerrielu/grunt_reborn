@@ -8,26 +8,24 @@ export class CardFrame extends CompositeComponent {
     const mid: Color = [200, 190, 160, 255];
 
     const bg = new Component(); bg.color = light; bg.position = [0, 0]; bg.rects = [[0, 0, w, h]];
-    const s = w / 64;
-    const r = (v: number) => Math.round(v * s);
     const outer = new Component(); outer.color = dark; outer.position = [0, 0]; outer.rects = [
-      [0, 0, w, Math.max(1, r(2))], [0, h - Math.max(1, r(2)), w, Math.max(1, r(2))], [0, 0, Math.max(1, r(2)), h], [w - Math.max(1, r(2)), 0, Math.max(1, r(2)), h],
+      [0, 0, w, 2], [0, h - 2, w, 2], [0, 0, 2, h], [w - 2, 0, 2, h],
     ];
-    const nameBar = new Component(); nameBar.color = mid; nameBar.position = [0, 0]; nameBar.rects = [[r(4), r(4), w - r(8), Math.max(1, r(10))]];
-    const artWin = new Component(); artWin.color = [210, 205, 195, 255]; artWin.position = [0, 0]; artWin.rects = [[r(6), r(16), w - r(12), Math.max(1, r(34))]];
+    const nameBar = new Component(); nameBar.color = mid; nameBar.position = [0, 0]; nameBar.rects = [[4, 4, w - 8, 10]];
+    const artWin = new Component(); artWin.color = [210, 205, 195, 255]; artWin.position = [0, 0]; artWin.rects = [[6, 16, w - 12, 34]];
     const artBorder = new Component(); artBorder.color = dark; artBorder.position = [0, 0]; artBorder.rects = [
-      [r(6), r(16), w - r(12), 1], [r(6), r(16) + Math.max(1, r(34)) - 1, w - r(12), 1], [r(6), r(16), 1, Math.max(1, r(34))], [w - r(7), r(16), 1, Math.max(1, r(34))],
+      [6, 16, w - 12, 1], [6, 49, w - 12, 1], [6, 16, 1, 34], [w - 7, 16, 1, 34],
     ];
-    const typeLine = new Component(); typeLine.color = [225, 215, 190, 255]; typeLine.position = [0, 0]; typeLine.rects = [[r(6), r(52), w - r(12), Math.max(1, r(7))]];
-    const effectArea = new Component(); effectArea.color = [245, 238, 215, 255]; effectArea.position = [0, 0]; effectArea.rects = [[r(6), r(61), w - r(12), Math.max(1, r(24))]];
-    const statBar = new Component(); statBar.color = accent; statBar.position = [0, 0]; statBar.rects = [[r(6), r(87), w - r(12), Math.max(1, r(5))]];
+    const typeLine = new Component(); typeLine.color = [225, 215, 190, 255]; typeLine.position = [0, 0]; typeLine.rects = [[6, 52, w - 12, 7]];
+    const effectArea = new Component(); effectArea.color = [245, 238, 215, 255]; effectArea.position = [0, 0]; effectArea.rects = [[6, 61, w - 12, 24]];
+    const statBar = new Component(); statBar.color = accent; statBar.position = [0, 0]; statBar.rects = [[6, 87, w - 12, 5]];
 
     const starComps: Component[] = [];
     for (let i = 0; i < stars; i++) {
       const st = new Component();
       st.color = [230, 200, 60, 255];
       st.position = [0, 0];
-      st.rects = [[r(8) + i * Math.max(1, r(10)), r(6), Math.max(1, r(6)), Math.max(1, r(6))]];
+      st.rects = [[8 + i * 10, 6, 6, 6]];
       starComps.push(st);
     }
 
@@ -36,7 +34,7 @@ export class CardFrame extends CompositeComponent {
 }
 
 export class CardIcon extends Component {
-  constructor(rects: [number, number, number, number][], color: Color, res: number = 1) {
+  constructor(rects: [number, number, number, number][], color: Color) {
     super();
     this.color = color;
     this.position = [0, 0];
@@ -46,10 +44,9 @@ export class CardIcon extends Component {
       maxX = Math.max(maxX, x + w); maxY = Math.max(maxY, y + h);
     }
     const srcW = maxX - minX; const srcH = maxY - minY;
-    const artW = 52 * res; const artH = 34 * res;
-    const scale = Math.min(artW / srcW, artH / srcH) * 0.85;
+    const scale = Math.min(52 / srcW, 34 / srcH) * 0.85;
     const bw = srcW * scale; const bh = srcH * scale;
-    const artCx = 32 * res; const artCy = 33 * res;
+    const artCx = 32; const artCy = 33;
     this.rects = rects.map(([x, y, w, h]) => [
       Math.round((x - minX) * scale + (artCx - bw / 2)),
       Math.round((y - minY) * scale + (artCy - bh / 2)),
