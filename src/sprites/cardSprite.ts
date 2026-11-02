@@ -1,5 +1,6 @@
 import { SpriteTemplate } from "./sprite_template";
 import { CardFrame, CardIcon } from "./components/cardFrame";
+import { MenSpriteTemplate } from "./men";
 import { getCard } from "../config/cards";
 import type { Color } from "./components/base";
 
@@ -70,9 +71,14 @@ export class CardSpriteTemplate extends SpriteTemplate {
     const iconColor = ICON_COLOR[cardId] ?? [60, 60, 60, 255];
     const rects = ICONS[cardId] ?? [[20, 22, 8, 8]];
     const stars = type === "instant" ? 2 : type === "summon" ? 4 : 3;
+    const isSummon = type === "summon";
     const frame = new CardFrame(64, 96, accent, stars);
-    const icon = new CardIcon(rects, iconColor);
-    this.COMPONENTS = [frame, icon];
+    const components: any[] = [frame];
+    if (!isSummon) {
+      const icon = new CardIcon(rects, iconColor);
+      components.push(icon);
+    }
+    this.COMPONENTS = components;
   }
 }
 
@@ -82,6 +88,11 @@ export function renderCardCanvas(cardId: string): HTMLCanvasElement {
   const ctx = canvas.getContext("2d")!;
   const def = getCard(cardId);
   if (!def) return canvas;
+  if (def.type === "summon") {
+    const stpl = new MenSpriteTemplate();
+    const sc = stpl.renderToCanvas();
+    ctx.drawImage(sc, 6, 16, 52, 34);
+  }
   ctx.fillStyle = "#1a1a1a";
   ctx.font = "bold 9px monospace";
   ctx.fillText(def.name, 6, 13);
