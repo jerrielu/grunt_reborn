@@ -63,8 +63,12 @@ export class CardSpriteTemplate extends SpriteTemplate {
   static WIDTH = 64;
   static HEIGHT = 96;
 
-  constructor(cardId: string) {
+  constructor(cardId: string, res: number = 1) {
     super();
+    const W = Math.round(64 * res);
+    const H = Math.round(96 * res);
+    (this as any).WIDTH = W;
+    (this as any).HEIGHT = H;
     const def = getCard(cardId);
     const type = def?.type ?? "tactic";
     const accent = TYPE_COLOR[type] ?? [100, 100, 100, 255];
@@ -72,51 +76,52 @@ export class CardSpriteTemplate extends SpriteTemplate {
     const rects = ICONS[cardId] ?? [[20, 22, 8, 8]];
     const stars = type === "instant" ? 2 : type === "summon" ? 4 : 3;
     const isSummon = type === "summon";
-    const frame = new CardFrame(64, 96, accent, stars);
+    const frame = new CardFrame(W, H, accent, stars);
     const components: any[] = [frame];
     if (!isSummon) {
-      const icon = new CardIcon(rects, iconColor);
+      const icon = new CardIcon(rects, iconColor, res);
       components.push(icon);
     }
     this.COMPONENTS = components;
+    (this as any)._res = res;
   }
 }
 
-export function renderCardCanvas(cardId: string): HTMLCanvasElement {
-  const tpl = new CardSpriteTemplate(cardId);
+export function renderCardCanvas(cardId: string, res: number = 1): HTMLCanvasElement {
+  const tpl = new CardSpriteTemplate(cardId, res);
   const canvas = tpl.renderToCanvas();
   const ctx = canvas.getContext("2d")!;
   const def = getCard(cardId);
   if (!def) return canvas;
+  const r = (v: number) => Math.round(v * res);
   if (def.type === "summon") {
     const stpl = new MenSpriteTemplate();
     const sc = stpl.renderToCanvas();
-    ctx.drawImage(sc, 6, 16, 52, 34);
+    ctx.drawImage(sc, r(6), r(16), r(52), r(34));
   }
   ctx.fillStyle = "#1a1a1a";
-  ctx.font = "bold 9px monospace";
-  ctx.fillText(def.name, 6, 13);
-  ctx.font = "7px monospace";
+  ctx.font = `bold ${r(9)}px monospace`;
+  ctx.fillText(def.name, r(6), r(13));
+  ctx.font = `${r(7)}px monospace`;
   ctx.fillStyle = "#333";
-  // wrap description into effect area
   const words = def.description.split("");
   let line = "";
-  let y = 68;
-  const maxW = 52;
+  let y = r(68);
+  const maxW = r(52);
   for (const ch of words) {
     const test = line + ch;
     if (ctx.measureText(test).width > maxW && line) {
-      ctx.fillText(line, 6, y);
+      ctx.fillText(line, r(6), y);
       line = ch;
-      y += 9;
-      if (y > 84) break;
+      y += r(9);
+      if (y > r(84)) break;
     } else {
       line = test;
     }
   }
-  if (line && y <= 84) ctx.fillText(line, 6, y);
-  ctx.font = "7px monospace";
+  if (line && y <= r(84)) ctx.fillText(line, r(6), y);
+  ctx.font = `${r(7)}px monospace`;
   ctx.fillStyle = "#555";
-  ctx.fillText(def.type.toUpperCase(), 6, 58);
+  ctx.fillText(def.type.toUpperCase(), r(6), r(58));
   return canvas;
 }
