@@ -60,8 +60,8 @@ const ICONS: Record<string, [number, number, number, number][]> = {
 };
 
 export class CardSpriteTemplate extends SpriteTemplate {
-  static WIDTH = 48;
-  static HEIGHT = 64;
+  static WIDTH = 64;
+  static HEIGHT = 96;
 
   constructor(cardId: string) {
     super();
@@ -70,8 +70,9 @@ export class CardSpriteTemplate extends SpriteTemplate {
     const accent = TYPE_COLOR[type] ?? [100, 100, 100, 255];
     const iconColor = ICON_COLOR[cardId] ?? [60, 60, 60, 255];
     const rects = ICONS[cardId] ?? [[20, 22, 8, 8]];
-    const frame = new CardFrame(48, 64, accent);
-    const icon = new CardIcon(rects, iconColor);
+    const stars = type === "instant" ? 2 : type === "summon" ? 4 : 3;
+    const frame = new CardFrame(64, 96, accent, stars);
+    const icon = new CardIcon(rects, iconColor, 2, [10, 20]);
     this.COMPONENTS = [frame, icon];
   }
 }
