@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import type { BattleSim } from "../core/battle/BattleSim";
 import type { Unit } from "../core/types";
+import { TileFactory } from "../tiles/TileFactory";
 
 export class BattleScene extends Phaser.Scene {
   sim!: BattleSim;
@@ -16,16 +17,16 @@ export class BattleScene extends Phaser.Scene {
   }
 
   create(): void {
-    const w = 900, h = 900;
-    // ground
-    const g = this.add.graphics();
-    g.fillStyle(0x2a3a2a, 1);
-    g.fillRect(0, 0, w, h);
-    g.lineStyle(4, 0x6a5a3a, 1);
-    g.strokeRect(2, 2, w - 4, h - 4);
+    const w = 180, h = 320;
+    // reusable ground texture
+    const key = TileFactory.ensureGroundTexture(this, w, h);
+    const ground = this.add.image(0, 0, key).setOrigin(0, 0);
+    const border = this.add.graphics();
+    border.lineStyle(4, 0x6a5a3a, 1);
+    border.strokeRect(2, 2, w - 4, h - 4);
     // camera
     this.cameras.main.setBounds(0, 0, w, h);
-    this.cameras.main.setZoom(2);
+    this.cameras.main.setZoom(1);
     // listen to sim events for damage numbers
     this.sim.events.on("unit.died", (e) => {
       const u = this.findUnit(e.data.id as number);

@@ -4,8 +4,8 @@ import { Rng } from "../rng";
 import { applyDamage, heal, knockback, distance, findNearest } from "../combat";
 import { playCard as playCardImpl } from "../cards/CardEngine";
 
-const ARENA = { w: 900, h: 900 };
-const WALL = 30;
+const ARENA = { w: 180, h: 320 };
+const WALL = 12;
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
@@ -13,7 +13,7 @@ function clamp(v: number, lo: number, hi: number): number {
 
 function makeHero(id: number, generalId: string): HeroUnit {
   const base: HeroUnit = {
-    id, side: "hero", name: "主角", x: 450, y: 450, hp: 120, maxHp: 120,
+    id, side: "hero", name: "主角", x: ARENA.w / 2, y: ARENA.h / 2, hp: 120, maxHp: 120,
     speed: 90, attackDamage: 12, attackRange: 46, attackInterval: 0.7, attackCooldown: 0,
     radius: 14, alive: true, targetId: null, facing: 0,
     damageTakenMul: 1, damageDealtMul: 1, speedMul: 1, attackIntervalMul: 1,
