@@ -36,7 +36,7 @@ export class BattleScene extends Phaser.Scene {
       if (tgt) this.spawnDamageText(tgt.x, tgt.y, `-${e.data.dmg}`, "#ffff88");
       const hero = this.sim.state.hero;
       const hc = this.unitSprites.get(hero.id);
-      if (hc) this.playAttack(hc);
+      if (hc && tgt) this.playAttack(hc, tgt.x, tgt.y);
       const tc = tgt ? this.unitSprites.get(tgt.id) : undefined;
       if (tc) this.playHit(tc);
     });
@@ -45,7 +45,7 @@ export class BattleScene extends Phaser.Scene {
       if (tgt) this.spawnDamageText(tgt.x, tgt.y, `-${e.data.dmg}`, "#ff8888");
       const atk = this.findUnit(e.data.attackerId as number);
       const ac = atk ? this.unitSprites.get(atk.id) : undefined;
-      if (ac) this.playAttack(ac);
+      if (ac && tgt) this.playAttack(ac, tgt.x, tgt.y);
       const tc = tgt ? this.unitSprites.get(tgt.id) : undefined;
       if (tc) this.playHit(tc);
     });
@@ -63,8 +63,20 @@ export class BattleScene extends Phaser.Scene {
     this.tweens.add({ targets: t, y: y - 40, alpha: 0, duration: 600, onComplete: () => t.destroy() });
   }
 
-  playAttack(c: Phaser.GameObjects.Container): void {
-    this.tweens.add({ targets: c, scaleX: 1.25, scaleY: 1.25, duration: 80, yoyo: true, ease: "Quad.easeOut" });
+  playAttack(c: Phaser.GameObjects.Container, tx: number, ty: number): void {
+    const proj = this.add.rectangle(c.x, c.y, 6, 24, 0xc8c8d2);
+    proj.setOrigin(0.5, 1);
+    const angle = Phaser.Math.Angle.Between(c.x, c.y, tx, ty);
+    proj.setRotation(angle + Math.PI / 2);
+    this.tweens.add({
+      targets: proj,
+      x: tx,
+      y: ty,
+      duration: 180,
+      ease: "Quad.easeOut",
+      onComplete: () => proj.destroy(),
+    });
+    this.tweens.add({ targets: c, scaleX: 1.15, scaleY: 1.15, duration: 80, yoyo: true, ease: "Quad.easeOut" });
   }
 
   playHit(c: Phaser.GameObjects.Container): void {
