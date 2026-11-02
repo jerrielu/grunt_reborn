@@ -1,0 +1,128 @@
+// Core simulation types. No Phaser, no DOM, no Math.random/Date.now.
+
+export type Vec2 = { x: number; y: number };
+
+export type Side = "hero" | "enemy" | "summon";
+
+export interface Unit {
+  id: number;
+  side: Side;
+  name: string;
+  x: number;
+  y: number;
+  hp: number;
+  maxHp: number;
+  speed: number;
+  attackDamage: number;
+  attackRange: number;
+  attackInterval: number; // seconds between attacks
+  attackCooldown: number; // remaining seconds until next attack
+  radius: number; // collision/separation radius
+  alive: boolean;
+  // AI state
+  targetId: number | null;
+  facing: number; // radians
+  // status
+  damageTakenMul: number;
+  damageDealtMul: number;
+  speedMul: number;
+  attackIntervalMul: number;
+  // knockback
+  knockVx: number;
+  knockVy: number;
+}
+
+export interface HeroUnit extends Unit {
+  side: "hero";
+  lowHpThreshold: number; // fraction
+  retreating: boolean;
+}
+
+export interface SummonUnit extends Unit {
+  side: "summon";
+  // summons use same AI as enemies (nearest enemy)
+}
+
+export interface EnemyUnit extends Unit {
+  side: "enemy";
+  kind: "grunt" | "elite" | "boss";
+  isElite: boolean;
+  isBoss: boolean;
+}
+
+export type BuffKind = "tactic" | "equipment" | "instant";
+
+export interface Buff {
+  id: string;
+  kind: BuffKind;
+  name: string;
+  roundsRemaining: number; // decremented each round start; 0 = expired
+  // numeric mods
+  speedMul: number;
+  attackIntervalMul: number;
+  damageTakenMul: number;
+  damageDealtMul: number;
+  attackRangeAdd: number;
+  // behavior override token (tactics)
+  behavior: string | null; // e.g. "charge", "guard", "assassinate", ...
+  // auto-skill
+  autoSkill: string | null; // e.g. "aoeSlamOnLowHp"
+  autoSkillUsedThisRound: boolean;
+}
+
+export interface CardDef {
+  id: string;
+  name: string;
+  type: "tactic" | "equipment" | "instant" | "summon";
+  equipmentSlot?: "weapon" | "armor" | "boots";
+  durationRounds?: number;
+  description: string;
+}
+
+export interface CardInstance {
+  instanceId: number;
+  defId: string;
+}
+
+export type Phase = "fight" | "decide" | "reward" | "over";
+
+export interface RunState {
+  seed: number;
+  generalId: string;
+  level: number;
+  round: number;
+  phase: Phase;
+  timer: number; // seconds remaining in fight phase
+  fightSeconds: number; // 10 normally, 7 for boss
+  hero: HeroUnit;
+  enemies: EnemyUnit[];
+  summons: SummonUnit[];
+  deck: CardInstance[]; // owned cards (replayable)
+  equipment: { weapon: string | null; armor: string | null; boots: string | null };
+  buffs: Buff[]; // active tactic buffs
+  roundBuffs: { slowEnemies: number; heroDamageBoost: number; heroDamageTakenBoost: number }; // instant round-scoped
+  kills: number;
+  elitesKilled: number;
+  bossesKilled: number;
+  levelsCleared: number;
+  nextUnitId: number;
+  spawnQueue: { kind: "grunt" | "elite" | "boss"; at: number }[]; // scheduled spawns (time in round)
+  roundTime: number; // elapsed seconds in current fight phase (resets each round)
+  levelTime: number; // elapsed seconds since level start (cumulative across rounds)
+  waveIndex: number;
+  wavesTotal: number;
+  eliteSpawned: boolean;
+  bossSpawned: boolean;
+  rewardChoices: string[]; // card def ids
+  rngState: number; // serialized PRNG state
+  tutorial: boolean;
+  tutorialStep: number;
+}
+
+export interface GameEvent {
+  type: string;
+  data: Record<string, unknown>;
+  t: number; // round time
+}
+
+export type EventHandler = (e: GameEvent) => void;
