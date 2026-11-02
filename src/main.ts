@@ -35,7 +35,7 @@ function startRun(generalId: string): void {
   bs.sim.events.on("hero.died", () => {
     const { points, level } = controller.endRun();
     const overlay = document.createElement("div");
-    overlay.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,10,30,0.9);color:#fff;font-family:sans-serif;z-index:10;";
+    overlay.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,10,30,0.9);color:#fff;font-family:monospace;z-index:10;";
     overlay.innerHTML = `<h2>战败</h2><p>通关关卡: ${level}</p><p>获得轮回积分: ${points}</p><p>总积分: ${controller.meta.state.points}</p>`;
     const btn = document.createElement("button");
     btn.textContent = "返回轮回殿";

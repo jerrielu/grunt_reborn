@@ -5,7 +5,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
   const root = document.getElementById("game")!;
   const panel = document.createElement("div");
   panel.id = "hand-panel";
-  panel.style.cssText = "position:absolute;left:0;right:0;bottom:0;padding:8px;background:rgba(0,0,0,0.7);color:#fff;font-family:sans-serif;z-index:9;display:none;flex-wrap:wrap;gap:6px;";
+  panel.style.cssText = "position:absolute;left:0;right:0;bottom:0;padding:8px;background:rgba(0,0,0,0.7);color:#fff;font-family:monospace;z-index:9;display:none;flex-wrap:wrap;gap:6px;";
   root.appendChild(panel);
 
   function render(): void {

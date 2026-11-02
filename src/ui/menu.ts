@@ -5,7 +5,7 @@ export function showMenu(onStart: (generalId: string) => void): void {
   root.querySelectorAll(".overlay").forEach((e) => e.remove());
   const overlay = document.createElement("div");
   overlay.className = "overlay";
-  overlay.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,10,30,0.9);color:#fff;font-family:sans-serif;z-index:10;";
+  overlay.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,10,30,0.9);color:#fff;font-family:monospace;z-index:10;";
   const title = document.createElement("h1");
   title.textContent = "小兵重来 · Grunt Reborn";
   overlay.appendChild(title);

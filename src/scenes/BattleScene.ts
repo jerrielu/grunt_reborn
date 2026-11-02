@@ -75,9 +75,12 @@ export class BattleScene extends Phaser.Scene {
       let c = this.unitSprites.get(u.id);
       if (!c) {
         c = this.add.container(u.x, u.y);
-        const body = this.add.rectangle(0, 0, 20, 20, u.side === "hero" ? 0x4488ff : u.side === "summon" ? 0x44aa44 : 0xaa4444);
-        c.add(body);
-        const label = this.add.text(0, -18, u.name, { fontSize: "9px", color: "#fff" }).setOrigin(0.5);
+        const sprite = this.add.image(0, 0, "hero");
+        sprite.setScale(0.32);
+        if (u.side === "enemy") sprite.setTint(0xaa4444);
+        else if (u.side === "summon") sprite.setTint(0x44aa44);
+        c.add(sprite);
+        const label = this.add.text(0, -18, u.name, { fontSize: "8px", color: "#fff", fontFamily: "monospace" }).setOrigin(0.5);
         c.add(label);
         this.unitSprites.set(u.id, c);
         const hb = this.add.graphics();
