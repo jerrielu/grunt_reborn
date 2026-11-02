@@ -7,7 +7,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
 
   const panel = document.createElement("div");
   panel.id = "hand-panel";
-  panel.style.cssText = "position:absolute;left:0;right:0;bottom:0;height:10%;background:linear-gradient(180deg,#5a3a1a 0%,#3a2410 100%);color:#fff;font-family:monospace;z-index:9;display:flex;align-items:center;justify-content:space-between;padding:4px 8px;box-sizing:border-box;border-top:2px solid #2a1a08;overflow:hidden;";
+  panel.style.cssText = "position:absolute;left:0;right:0;bottom:0;height:10%;background:linear-gradient(180deg,#5a3a1a 0%,#3a2410 100%);color:#fff;font-family:monospace;z-index:9;display:flex;align-items:center;justify-content:space-between;padding:4px 8px;box-sizing:border-box;border-top:2px solid #2a1a08;overflow:visible;";
   root.appendChild(panel);
 
   // desk texture lines
@@ -68,6 +68,8 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
       startY = e.clientY;
       moved = false;
       wrap.setPointerCapture(e.pointerId);
+      (wrap as any)._origZ = wrap.style.zIndex;
+      wrap.style.zIndex = "100";
     });
     wrap.addEventListener("pointermove", (e) => {
       if (e.clientY < startY - 10) moved = true;
@@ -78,6 +80,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     wrap.addEventListener("pointerup", (e) => {
       const dy = e.clientY - startY;
       wrap.style.transform = "";
+      wrap.style.zIndex = (wrap as any)._origZ ?? "";
       if (dy < -40) {
         sim.playCard(defId);
       } else {
