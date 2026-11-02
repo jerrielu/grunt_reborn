@@ -39,7 +39,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     const canvas = renderCardCanvas(defId);
     const img = document.createElement("img");
     img.src = canvas.toDataURL("image/png");
-    img.style.cssText = "width:160px;height:240px;image-rendering:pixelated;border:2px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.8);";
+    img.style.cssText = "width:192px;height:288px;image-rendering:pixelated;border:2px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.8);";
     card.appendChild(img);
     const label = document.createElement("div");
     label.style.cssText = "margin-top:6px;font-size:12px;color:#fff;text-align:center;";
@@ -58,7 +58,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     const canvas = renderCardCanvas(defId);
     const img = document.createElement("img");
     img.src = canvas.toDataURL("image/png");
-    img.style.cssText = "width:52px;height:78px;image-rendering:pixelated;border:1px solid #333;box-shadow:0 2px 4px rgba(0,0,0,0.5);pointer-events:none;";
+    img.style.cssText = "width:62px;height:94px;image-rendering:pixelated;border:1px solid #333;box-shadow:0 2px 4px rgba(0,0,0,0.5);pointer-events:none;";
     wrap.appendChild(img);
 
     // gesture: slide up to play
@@ -98,11 +98,11 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     // fan layout
     const cards = s.deck;
     const n = cards.length;
-    const spread = 8;
+    const spread = 10;
     cards.forEach((inst, i) => {
       const el = makeCard(inst.defId);
       el.style.position = "absolute";
-      el.style.left = `calc(50% + ${(i - (n - 1) / 2) * 24}px)`;
+      el.style.left = `calc(50% + ${(i - (n - 1) / 2) * 29}px)`;
       el.style.bottom = "0";
       const angle = (i - (n - 1) / 2) * spread;
       el.style.transform = `translateX(-50%) rotate(${angle}deg)`;
@@ -114,10 +114,10 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     deckArea.innerHTML = "";
     // deck stack visual
     const stack = document.createElement("div");
-    stack.style.cssText = "position:relative;width:44px;height:66px;";
+    stack.style.cssText = "position:relative;width:53px;height:79px;";
     for (let i = 0; i < 3; i++) {
       const c = document.createElement("div");
-      c.style.cssText = `position:absolute;left:${i * 2}px;top:${i * 2}px;width:40px;height:60px;background:#222;border:1px solid #555;image-rendering:pixelated;`;
+      c.style.cssText = `position:absolute;left:${i * 2}px;top:${i * 2}px;width:48px;height:72px;background:#222;border:1px solid #555;image-rendering:pixelated;`;
       stack.appendChild(c);
     }
     const deckLabel = document.createElement("div");
