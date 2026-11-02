@@ -10,11 +10,17 @@ const controller = new GameController();
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: "game",
-  width: 480,
-  height: 640,
+  width: 393,
+  height: 852,
   backgroundColor: "#1a1a2e",
   pixelArt: true,
   roundPixels: true,
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: 393,
+    height: 852,
+  },
   physics: { default: "arcade", arcade: { gravity: { x: 0, y: 0 }, debug: false } },
   scene: [BootScene, BattleScene],
 };

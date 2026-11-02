@@ -1,5 +1,9 @@
 # 变更记录
 
+## v0.2.0
+- 调整画布布局为 iPhone 17 竖屏比例（393×852）并启用 FIT 缩放/居中
+- 完善移动端 viewport、安全区与 PWA 元信息
+
 ## v0.1.0
 - 初始版本：Vite+TS+Phaser 3 脚手架
 - 移植 pixelsmall sprite 组件组合架构（运行时生成 + Phaser 播放）
