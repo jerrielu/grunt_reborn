@@ -109,6 +109,7 @@ export interface RunState {
   spawnQueue: { kind: "grunt" | "elite" | "boss"; at: number }[]; // scheduled spawns (time in round)
   roundTime: number; // elapsed seconds in current fight phase (resets each round)
   levelTime: number; // elapsed seconds since level start (cumulative across rounds)
+  nextDrawAt: number; // levelTime threshold for next automatic card draw
   waveIndex: number;
   wavesTotal: number;
   eliteSpawned: boolean;

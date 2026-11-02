@@ -3,8 +3,9 @@ import { EventEmitter } from "../events";
 import { Rng } from "../rng";
 import { applyDamage, heal, knockback, distance, findNearest } from "../combat";
 import { playCard as playCardImpl } from "../cards/CardEngine";
+import { CARDS } from "../../config/cards";
 
-const ARENA = { w: 180, h: 320 };
+const ARENA = { w: 180, h: 256 };
 const WALL = 12;
 
 function clamp(v: number, lo: number, hi: number): number {
@@ -41,7 +42,7 @@ export function createRunState(seed: number, generalId: string): RunState {
     deck, equipment: { weapon: null, armor: null, boots: null },
     buffs: [], roundBuffs: { slowEnemies: 1, heroDamageBoost: 1, heroDamageTakenBoost: 1 },
     kills: 0, elitesKilled: 0, bossesKilled: 0, levelsCleared: 0,
-    nextUnitId: 2, spawnQueue: [], roundTime: 0, levelTime: 0, waveIndex: 0, wavesTotal,
+    nextUnitId: 2, spawnQueue: [], roundTime: 0, levelTime: 0, nextDrawAt: 0, waveIndex: 0, wavesTotal,
     eliteSpawned: false, bossSpawned: false, rewardChoices: [],
     rngState: rng.getState(), tutorial: false, tutorialStep: 0,
   };
@@ -90,6 +91,8 @@ export class BattleSim {
     (s as any)._hpMul = hpMul;
     (s as any)._atkMul = atkMul;
     this.emit("level.start", { level: s.level, waves: s.wavesTotal });
+    s.nextDrawAt = 5;
+    this.drawCard();
     this.emit("phase.changed", { phase: "fight" });
   }
 
@@ -156,11 +159,10 @@ export class BattleSim {
       this.levelClear();
     }
 
-    // timer expiry -> decide
-    if (s.timer <= 0 && s.phase === "fight") {
-      s.phase = "decide";
-      s.timer = 0;
-      this.emit("phase.changed", { phase: "decide" });
+    // automatic card draw every 5s
+    if (s.levelTime >= s.nextDrawAt) {
+      this.drawCard();
+      s.nextDrawAt += 5;
     }
   }
 
@@ -451,6 +453,15 @@ export class BattleSim {
   }
 
   // Public helpers for external control
+  drawCard(): void {
+    const s = this.state;
+    const pool = CARDS.map((c) => c.id);
+    const id = pool[this.rng.int(0, pool.length - 1)];
+    const inst = { instanceId: s.nextUnitId++, defId: id };
+    s.deck.push(inst);
+    this.emit("card.drawn", { defId: id, instanceId: inst.instanceId });
+  }
+
   playCard(cardId: string): { ok: boolean; reason?: string } {
     const res = playCardImpl(this.state, cardId, this.rng, (type, data) => this.emit(type, data));
     if (res.ok) this.emit("card.played", { cardId, ok: true });
