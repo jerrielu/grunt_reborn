@@ -1,6 +1,6 @@
 import type { BattleSim } from "../core/battle/BattleSim";
 import { getCard } from "../config/cards";
-import { CardSpriteTemplate } from "../sprites/cardSprite";
+import { renderCardCanvas } from "../sprites/cardSprite";
 
 export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => void): void {
   const root = document.getElementById("game")!;
@@ -13,8 +13,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     const def = getCard(defId);
     const wrap = document.createElement("div");
     wrap.style.cssText = "display:flex;flex-direction:column;align-items:center;cursor:pointer;transform:rotate(" + (Math.random() * 6 - 3) + "deg);margin:0 2px;";
-    const tpl = new CardSpriteTemplate(defId);
-    const canvas = tpl.renderToCanvas();
+    const canvas = renderCardCanvas(defId);
     const img = document.createElement("img");
     img.src = canvas.toDataURL("image/png");
     img.style.cssText = "width:64px;height:96px;image-rendering:pixelated;border:1px solid #333;box-shadow:0 2px 4px rgba(0,0,0,0.5);";

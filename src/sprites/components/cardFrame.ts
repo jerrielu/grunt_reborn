@@ -34,10 +34,24 @@ export class CardFrame extends CompositeComponent {
 }
 
 export class CardIcon extends Component {
-  constructor(rects: [number, number, number, number][], color: Color, scale: number = 2, offset: [number, number] = [10, 20]) {
+  constructor(rects: [number, number, number, number][], color: Color) {
     super();
     this.color = color;
     this.position = [0, 0];
-    this.rects = rects.map(([x, y, w, h]) => [x * scale + offset[0], y * scale + offset[1], w * scale, h * scale]) as any;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const [x, y, w, h] of rects) {
+      minX = Math.min(minX, x); minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x + w); maxY = Math.max(maxY, y + h);
+    }
+    const srcW = maxX - minX; const srcH = maxY - minY;
+    const scale = Math.min(52 / srcW, 34 / srcH) * 0.85;
+    const bw = srcW * scale; const bh = srcH * scale;
+    const artCx = 32; const artCy = 33;
+    this.rects = rects.map(([x, y, w, h]) => [
+      Math.round((x - minX) * scale + (artCx - bw / 2)),
+      Math.round((y - minY) * scale + (artCy - bh / 2)),
+      Math.max(1, Math.round(w * scale)),
+      Math.max(1, Math.round(h * scale)),
+    ]) as any;
   }
 }
