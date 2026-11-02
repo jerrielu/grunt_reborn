@@ -2,6 +2,12 @@
 
 This game is designed for mobile phone in portrait mode.
 
+## Drawing Elements
+
+- All drawing elements must be reusable. Do not inline one-off drawing code in scenes; extract it into reusable components.
+- Put reusable drawing elements into the appropriate folder (e.g. `src/sprites` and its `components/` subfolder), not scattered across scenes or other modules.
+- Drawing elements must follow the same format as the sprites (see `src/sprites/sprite_template.ts` and `src/sprites/components/`): `Component`/`CompositeComponent` based, with `pixels()`, `position`, `color`, `rects`/`offsets`, and rendering through `SpriteTemplate`/`renderToCanvas()`, so they can be composed and reused like sprites.
+
 ## Testing
 
 - Always perform necessary tests, but not excessive tests.
