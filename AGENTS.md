@@ -17,9 +17,10 @@
 
 ## Versioning
 
-- Remember to update the version number for every commit.
+- Do not update the version number for every commit. Instead, at the end of the job completion, update the version number in the final commit.
 - The version to update to depends on the change size (e.g., major for large/breaking changes, minor for new features, patch for small fixes).
 
 ## Git
 
-- Commit and push for every meaningful change automatically.
+- Commit locally for every meaningful change, but do not push for every commit.
+- At the end of the job completion, push in the final commit (which includes the version number update).
