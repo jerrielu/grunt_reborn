@@ -20,6 +20,13 @@ export class BootScene extends Phaser.Scene {
       vtex.getContext().drawImage(vcanvas, 0, 0);
       vtex.refresh();
     }
+
+    // Force nearest-neighbor filtering for crisp pixel art
+    this.textures.each((texture: Phaser.Textures.Texture) => {
+      if (texture.key === "__DEFAULT" || texture.key === "__MISSING") return;
+      texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
+    }, this);
+
     const sprite = this.add.image(this.scale.width / 2, this.scale.height / 2, "hero");
     sprite.setScale(4);
     this.add.text(16, 16, "Grunt Reborn - P1 scaffold", { color: "#ffffff", fontSize: "14px" });

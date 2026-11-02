@@ -8,11 +8,11 @@ export class MenSpriteTemplate extends SpriteTemplate {
   static DEFAULT_OUTPUT = "men.png";
 
   COMPONENTS = [
-    new Head([32, 14]),
+    new Head([32, 18]),
     new Body([32, 30]),
-    new Arm([22, 29]),
-    new Arm([42, 29]),
-    new Leg([29, 45], "left"),
-    new Leg([35, 45], "right"),
+    new Arm([22, 28]),
+    new Arm([42, 28]),
+    new Leg([28, 38], "left"),
+    new Leg([36, 38], "right"),
   ];
 }

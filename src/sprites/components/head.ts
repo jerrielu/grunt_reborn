@@ -22,21 +22,16 @@ export class Head extends CompositeComponent {
 
     const hair = new Component();
     hair.color = hairColor;
-    hair.position = [px, py - 4];
+    hair.position = [px, py];
     hair.rects = _HEAD_RECTS.map((r) => [...r]) as any;
-    hair.clip = [-8, -4, 9, 2];
+    hair.clip = [-8, -8, 9, 5];
 
-    const eyeL = new Component();
-    eyeL.color = eyeColor;
-    eyeL.position = [px - 3, py];
-    eyeL.rects = [[0, 0, 1, 1]];
+    const face = new Component();
+    face.color = eyeColor;
+    face.position = [px, py];
+    face.rects = [[-1, 4, 3, 2]] as any;
 
-    const eyeR = new Component();
-    eyeR.color = eyeColor;
-    eyeR.position = [px + 3, py];
-    eyeR.rects = [[0, 0, 1, 1]];
-
-    this.children = [skin, hair, eyeL, eyeR];
+    this.children = [skin, hair, face];
   }
 }
 
