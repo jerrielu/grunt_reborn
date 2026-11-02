@@ -95,15 +95,14 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     // fan layout
     const cards = s.deck;
     const n = cards.length;
-    const cardW = 52;
-    const overlap = Math.max(16, cardW - (handArea.clientWidth - 20) / Math.max(1, n));
+    const spread = 8;
     cards.forEach((inst, i) => {
       const el = makeCard(inst.defId);
       el.style.position = "absolute";
-      el.style.left = `${i * (cardW - overlap)}px`;
+      el.style.left = "50%";
       el.style.bottom = "0";
-      const angle = (i - (n - 1) / 2) * 6;
-      el.style.transform = `rotate(${angle}deg)`;
+      const angle = (i - (n - 1) / 2) * spread;
+      el.style.transform = `translateX(-50%) rotate(${angle}deg)`;
       el.style.transformOrigin = "bottom center";
       el.style.zIndex = String(i);
       handArea.appendChild(el);
