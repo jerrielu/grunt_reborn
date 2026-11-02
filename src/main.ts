@@ -16,10 +16,8 @@ const config: Phaser.Types.Core.GameConfig = {
   pixelArt: true,
   roundPixels: true,
   scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-    width: 393,
-    height: 852,
+    mode: Phaser.Scale.RESIZE,
+    autoCenter: Phaser.Scale.NO_CENTER,
   },
   physics: { default: "arcade", arcade: { gravity: { x: 0, y: 0 }, debug: false } },
   scene: [BootScene, BattleScene],
