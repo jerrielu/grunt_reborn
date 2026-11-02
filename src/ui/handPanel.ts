@@ -80,16 +80,20 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
         wrap.style.transform = `translateY(${e.clientY - startY}px)`;
       }
     });
-    wrap.addEventListener("pointerup", (e) => {
-      const dy = e.clientY - startY;
+    const cancelGesture = () => {
       wrap.style.transform = "";
       wrap.style.zIndex = (wrap as any)._origZ ?? "";
+    };
+    wrap.addEventListener("pointerup", (e) => {
+      const dy = e.clientY - startY;
+      cancelGesture();
       if (dy < -40) {
         playCardWithEffect(defId, wrap);
       } else {
         showPreview(defId);
       }
     });
+    wrap.addEventListener("pointercancel", cancelGesture);
 
     function playCardWithEffect(cardId: string, source: HTMLElement): void {
       if ((source as any)._playing) return;
@@ -122,26 +126,41 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
         { left: startLeft + "px", top: startTop + "px", transform: "scale(0.32)" },
         { left: targetLeft + "px", top: targetTop + "px", transform: "scale(1)" },
       ], { duration: 280, easing: "cubic-bezier(0.2,0.8,0.2,1)", fill: "forwards" });
-      moveAnim.onfinish = () => {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        try { moveAnim.cancel(); } catch {}
+        try { if (blast) blast.remove(); } catch {}
+        float.remove();
+        (source as any)._playing = false;
+        sim.playCard(cardId);
+      };
+      let blast: HTMLDivElement | null = null;
+      const startBlast = () => {
         float.style.left = targetLeft + "px";
         float.style.top = targetTop + "px";
         float.style.transform = "scale(1)";
         float.style.transformOrigin = "";
-        // magic blast
-        const blast = document.createElement("div");
+        blast = document.createElement("div");
         blast.style.cssText = "position:absolute;left:50%;top:50%;width:40px;height:40px;margin-left:-20px;margin-top:-20px;border-radius:50%;background:radial-gradient(circle,rgba(255,220,80,0.95),rgba(255,120,0,0.5) 55%,transparent 72%);z-index:21;pointer-events:none;";
         root.appendChild(blast);
         const blastAnim = blast.animate([
           { transform: "scale(0.4)", opacity: 1 },
           { transform: "scale(7)", opacity: 0 },
         ], { duration: 420, easing: "ease-out", fill: "forwards" });
-        blastAnim.onfinish = () => {
-          blast.remove();
-          float.remove();
-          (source as any)._playing = false;
-          sim.playCard(cardId);
-        };
+        blastAnim.onfinish = finish;
+        blastAnim.oncancel = finish;
       };
+      moveAnim.onfinish = startBlast;
+      moveAnim.oncancel = startBlast;
+      // safety fallback in case animation events don't fire
+      window.setTimeout(() => {
+        if (!done) {
+          if (!blast) startBlast();
+          window.setTimeout(finish, 450);
+        }
+      }, 320);
     }
 
     wrap.title = def?.description ?? "";
