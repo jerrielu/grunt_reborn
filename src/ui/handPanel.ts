@@ -5,6 +5,9 @@ import { renderCardCanvas } from "../sprites/cardSprite";
 export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => void): void {
   const root = document.getElementById("game")!;
 
+  // remove any leftover panel from a previous run
+  document.getElementById("hand-panel")?.remove();
+
   const panel = document.createElement("div");
   panel.id = "hand-panel";
   panel.style.cssText = "position:absolute;left:0;right:0;bottom:0;height:10%;background:linear-gradient(180deg,#5a3a1a 0%,#3a2410 100%);color:#fff;font-family:monospace;z-index:9;display:flex;align-items:center;justify-content:space-between;padding:4px 8px;box-sizing:border-box;border-top:2px solid #2a1a08;overflow:visible;";
@@ -98,11 +101,15 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     // fan layout
     const cards = s.deck;
     const n = cards.length;
-    const spread = 10;
+    const avail = handArea.clientWidth || 300;
+    const cardW = 62;
+    const maxSpacing = 29;
+    const spacing = n <= 1 ? 0 : Math.min(maxSpacing, Math.max(12, (avail - cardW) / (n - 1)));
+    const spread = n > 5 ? 6 : 10;
     cards.forEach((inst, i) => {
       const el = makeCard(inst.defId);
       el.style.position = "absolute";
-      el.style.left = `calc(50% + ${(i - (n - 1) / 2) * 29}px)`;
+      el.style.left = `calc(50% + ${(i - (n - 1) / 2) * spacing}px)`;
       el.style.bottom = "0";
       const angle = (i - (n - 1) / 2) * spread;
       el.style.transform = `translateX(-50%) rotate(${angle}deg)`;
