@@ -15,6 +15,11 @@
 - design.md provides the high-level design of the game.
 - changes.md records changes for every version. Changes must be concise and meaningful, and should contain feature changes that players should know.
 
+## Versioning
+
+- Remember to update the version number for every commit.
+- The version to update to depends on the change size (e.g., major for large/breaking changes, minor for new features, patch for small fixes).
+
 ## Git
 
 - Commit and push for every meaningful change automatically.
