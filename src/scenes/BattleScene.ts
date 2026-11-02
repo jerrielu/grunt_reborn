@@ -25,7 +25,7 @@ export class BattleScene extends Phaser.Scene {
     g.strokeRect(2, 2, w - 4, h - 4);
     // camera
     this.cameras.main.setBounds(0, 0, w, h);
-    this.cameras.main.setZoom(0.7);
+    this.cameras.main.setZoom(1.4);
     // listen to sim events for damage numbers
     this.sim.events.on("unit.died", (e) => {
       const u = this.findUnit(e.data.id as number);
