@@ -57,7 +57,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
   function makeCard(defId: string): HTMLElement {
     const def = getCard(defId);
     const wrap = document.createElement("div");
-    wrap.style.cssText = "display:flex;flex-direction:column;align-items:center;cursor:grab;touch-action:none;user-select:none;margin:0 2px;";
+    wrap.style.cssText = "display:flex;flex-direction:column;align-items:center;cursor:grab;touch-action:none;user-select:none;margin:0;";
     const canvas = renderCardCanvas(defId);
     const img = document.createElement("img");
     img.src = canvas.toDataURL("image/png");
@@ -99,13 +99,16 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     handArea.innerHTML = "";
     const s = sim.state;
     // fan layout
-    const cards = s.deck;
+const cards = s.deck;
     const n = cards.length;
-    const avail = handArea.clientWidth || 300;
-    const cardW = 62;
+    const avail = handArea.clientWidth || Math.round(root.clientWidth * 0.8) || 314;
+    const cardW = 70;
+    const cardH = 98;
     const maxSpacing = 29;
-    const spacing = n <= 1 ? 0 : Math.min(maxSpacing, Math.max(12, (avail - cardW) / (n - 1)));
-    const spread = n > 5 ? 6 : 10;
+    const spread = n > 8 ? 4 : n > 5 ? 6 : 10;
+    const maxAngle = ((n - 1) / 2) * spread * (Math.PI / 180);
+    const proj = cardW * Math.cos(maxAngle) + cardH * Math.sin(maxAngle);
+    const spacing = n <= 1 ? 0 : Math.min(maxSpacing, (avail - proj) / (n - 1));
     cards.forEach((inst, i) => {
       const el = makeCard(inst.defId);
       el.style.position = "absolute";
