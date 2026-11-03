@@ -10,11 +10,11 @@ This game is designed for mobile phone in portrait mode.
 
 ## Testing
 
-- Always perform necessary tests, but not excessive tests.
+- Always perform necessary tests, but not excessive tests, good enough is OK.
 - Code containing business logic or functional logic requires unit tests.
+- No test is required for any visual element such as rendering etc.
 - Code without any logic (pure data, config, markup, trivial passthrough) does not require tests.
-- Always include both end-to-end (E2E) tests and unit tests.
-- End-to-end tests must verify the game works correctly. Each E2E test must log every behavior and every game state data change.
+- Always include both end-to-end (E2E) gameplay tests for verifying the game works correctly. Each E2E test must log every behavior and every game state data change. Do not perform E2E test through browser or in a visual way.
 
 ## Documentation
 

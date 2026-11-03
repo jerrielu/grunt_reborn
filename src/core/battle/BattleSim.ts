@@ -464,8 +464,13 @@ export class BattleSim {
 
   playCard(cardId: string): { ok: boolean; reason?: string } {
     const res = playCardImpl(this.state, cardId, this.rng, (type, data) => this.emit(type, data));
-    if (res.ok) this.emit("card.played", { cardId, ok: true });
-    else this.emit("card.rejected", { cardId, reason: res.reason });
+    if (res.ok) {
+      // consume the played card from hand/deck
+      const s = this.state;
+      const idx = s.deck.findIndex((c) => c.defId === cardId);
+      if (idx >= 0) s.deck.splice(idx, 1);
+      this.emit("card.played", { cardId, ok: true });
+    } else this.emit("card.rejected", { cardId, reason: res.reason });
     return res;
   }
 

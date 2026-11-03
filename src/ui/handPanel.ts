@@ -207,10 +207,10 @@ const cards = s.deck;
     deckArea.innerHTML = "";
     // deck stack visual
     const stack = document.createElement("div");
-    stack.style.cssText = "position:relative;width:53px;height:79px;";
+    stack.style.cssText = "position:relative;width:62px;height:94px;";
     for (let i = 0; i < 3; i++) {
       const c = document.createElement("div");
-      c.style.cssText = `position:absolute;left:${i * 2}px;top:${i * 2}px;width:48px;height:72px;background:#222;border:1px solid #555;image-rendering:pixelated;`;
+      c.style.cssText = `position:absolute;left:${i * 2}px;top:${i * 2}px;width:62px;height:94px;background:#222;border:1px solid #555;image-rendering:pixelated;`;
       stack.appendChild(c);
     }
     const deckLabel = document.createElement("div");
