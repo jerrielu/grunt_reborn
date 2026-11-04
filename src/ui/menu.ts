@@ -24,13 +24,13 @@ export function showMenu(onStart: (generalId: string) => void): void {
   ];
 
   const btnW = 150;
-  const btnH = 26;
+  const btnH = 28;
   const startX = Math.round((W - btnW) / 2);
-  let y0 = 120;
+  let y0 = 118;
   const rects: { id: string; x: number; y: number; w: number; h: number }[] = [];
   for (const g of generals) {
     rects.push({ id: g.id, x: startX, y: y0, w: btnW, h: btnH });
-    y0 += 36;
+    y0 += 38;
   }
 
   let hovered = -1;
@@ -43,14 +43,6 @@ export function showMenu(onStart: (generalId: string) => void): void {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 20px monospace";
-    ctx.fillText("小兵重来", W / 2, 52);
-
-    ctx.fillStyle = "#aaaacc";
-    ctx.font = "10px monospace";
-    ctx.fillText("选择武将开始闯关", W / 2, 80);
-
     rects.forEach((r, i) => {
       const g = generals[i];
       ctx.fillStyle = hovered === i ? "#4a4a8e" : "#2a2a4e";
@@ -58,10 +50,46 @@ export function showMenu(onStart: (generalId: string) => void): void {
       ctx.strokeStyle = "#ffffff";
       ctx.lineWidth = 1;
       ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "10px monospace";
-      ctx.fillText(g.label, r.x + r.w / 2, r.y + r.h / 2);
     });
+
+    // Render text to an offscreen buffer then threshold alpha so glyphs become
+    // crisp pixel blocks (no anti-aliasing mud) when scaled with nearest-neighbor.
+    const off = document.createElement("canvas");
+    off.width = W;
+    off.height = H;
+    const octx = off.getContext("2d")!;
+    octx.imageSmoothingEnabled = false;
+    octx.textAlign = "center";
+    octx.textBaseline = "middle";
+    octx.clearRect(0, 0, W, H);
+
+    octx.fillStyle = "#ffffff";
+    octx.font = "bold 22px monospace";
+    octx.fillText("小兵重来", W / 2, 52);
+
+    octx.fillStyle = "#aaaacc";
+    octx.font = "11px monospace";
+    octx.fillText("选择武将开始闯关", W / 2, 80);
+
+    rects.forEach((r, i) => {
+      const g = generals[i];
+      octx.fillStyle = "#ffffff";
+      octx.font = "bold 11px monospace";
+      octx.fillText(g.label, r.x + r.w / 2, r.y + r.h / 2);
+    });
+
+    const img = octx.getImageData(0, 0, W, H);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i + 3] > 128) {
+        d[i + 3] = 255;
+      } else {
+        d[i] = 0; d[i + 1] = 0; d[i + 2] = 0; d[i + 3] = 0;
+      }
+    }
+    octx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(off, 0, 0);
   }
 
   draw();
