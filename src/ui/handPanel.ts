@@ -182,19 +182,8 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     isDrawing = true;
     const deckRect = deckArea.getBoundingClientRect();
     const rootRect = root.getBoundingClientRect();
-    const handRect = handArea.getBoundingClientRect();
-    const n = sim.state.deck.length;
-    const avail = (handArea.clientWidth || Math.round(root.clientWidth * 0.8) || 314) - 12;
-    const cardW = 70; const cardH = 98; const maxSpacing = 29;
-    const spread = n > 8 ? 4 : n > 5 ? 6 : 10;
-    const maxAngle = ((n - 1) / 2) * spread * (Math.PI / 180);
-    const proj = cardW * Math.cos(maxAngle) + cardH * Math.sin(maxAngle);
-    const spacing = n <= 1 ? 0 : Math.min(maxSpacing, (avail - proj) / (n - 1));
-    const offset = ((n - 1) / 2) * spacing;
     const startLeft = deckRect.left - rootRect.left + deckRect.width / 2 - 31;
     const startTop = deckRect.top - rootRect.top + deckRect.height / 2 - 47;
-    const endLeft = handRect.left - rootRect.left + handRect.width / 2 + offset - 31;
-    const endTop = handRect.bottom - rootRect.top - 98;
 
     const float = document.createElement("div");
     float.style.cssText = "position:absolute;z-index:22;pointer-events:none;display:flex;flex-direction:column;align-items:center;";
@@ -205,14 +194,13 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     float.appendChild(img);
     float.style.left = startLeft + "px";
     float.style.top = startTop + "px";
+    float.style.transform = "perspective(400px) rotateY(180deg) scale(0.85)";
     root.appendChild(float);
 
-    const midLeft = (startLeft + endLeft) / 2;
-    const midTop = Math.min(startTop, endTop) - 30;
     const anim = float.animate([
-      { left: startLeft + "px", top: startTop + "px", transform: "perspective(400px) rotateY(180deg) scale(0.85)", opacity: 1, offset: 0 },
-      { left: midLeft + "px", top: midTop + "px", transform: "perspective(400px) rotateY(90deg) scale(1)", opacity: 1, offset: 0.4 },
-      { left: endLeft + "px", top: endTop + "px", transform: "perspective(400px) rotateY(0deg) scale(1)", opacity: 1, offset: 1 },
+      { transform: "perspective(400px) rotateY(180deg) scale(0.85)", opacity: 1, offset: 0 },
+      { transform: "perspective(400px) rotateY(90deg) scale(1.1)", opacity: 1, offset: 0.5 },
+      { transform: "perspective(400px) rotateY(0deg) scale(1)", opacity: 1, offset: 1 },
     ], { duration: 420, easing: "cubic-bezier(0.2,0.8,0.2,1)", fill: "forwards" });
     const finish = () => {
       try { anim.cancel(); } catch {}
@@ -261,10 +249,6 @@ const cards = s.deck;
       c.style.cssText = `position:absolute;left:${i * 2}px;top:${i * 2}px;width:62px;height:94px;background:#222;border:1px solid #555;image-rendering:pixelated;`;
       stack.appendChild(c);
     }
-    const deckLabel = document.createElement("div");
-    deckLabel.style.cssText = "position:absolute;bottom:-14px;left:0;right:0;text-align:center;font-size:8px;color:#ccc;";
-    deckLabel.textContent = "牌库";
-    stack.appendChild(deckLabel);
     deckArea.appendChild(stack);
   }
 

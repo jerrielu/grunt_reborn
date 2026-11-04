@@ -17,7 +17,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   create(): void {
-    const w = 180, h = 390;
+    const w = 180, h = 335;
     // reusable ground texture
     const key = TileFactory.ensureGroundTexture(this, w, h);
     const ground = this.add.image(0, 0, key).setOrigin(0, 0);
