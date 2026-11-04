@@ -5,7 +5,7 @@ import { applyDamage, heal, knockback, distance, findNearest } from "../combat";
 import { playCard as playCardImpl } from "../cards/CardEngine";
 import { CARDS } from "../../config/cards";
 
-const ARENA = { w: 265, h: 574 };
+const ARENA = { w: 180, h: 351 };
 const WALL = 12;
 
 function clamp(v: number, lo: number, hi: number): number {
