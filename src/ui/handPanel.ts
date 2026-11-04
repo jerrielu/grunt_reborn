@@ -32,6 +32,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
   let isDrawing = false;
   let dragState: { defId: string; startY: number; el: HTMLElement; moved: boolean } | null = null;
   let cooldownSweep: HTMLElement | null = null;
+  let particleLayerRef: HTMLElement | null = null;
 
   function closePreview() {
     if (preview) { preview.remove(); preview = null; }
@@ -273,15 +274,19 @@ const cards = s.deck;
       c.style.cssText = `position:absolute;left:${i * 2}px;top:${i * 2}px;width:62px;height:94px;background:#222;border:1px solid #555;image-rendering:pixelated;`;
       stack.appendChild(c);
     }
-    // cooldown sweep on the top card back (golden, pixel-ish)
+    // cooldown sweep on the top card back (golden, pixel blocks, semi-transparent)
     const topCard = stack.lastElementChild as HTMLElement;
     const cool = document.createElement("div");
-    cool.style.cssText = "position:absolute;left:2px;right:2px;top:2px;bottom:2px;pointer-events:none;overflow:hidden;";
+    cool.style.cssText = "position:absolute;left:2px;right:2px;top:2px;bottom:2px;pointer-events:none;overflow:visible;";
     const sweep = document.createElement("div");
-    sweep.style.cssText = "position:absolute;left:0;bottom:0;width:100%;height:100%;background:repeating-linear-gradient(180deg,rgba(255,200,60,0.85) 0 2px,rgba(210,150,30,0.7) 2px 4px);image-rendering:pixelated;transform-origin:bottom center;";
+    sweep.style.cssText = "position:absolute;left:0;bottom:0;width:100%;height:100%;background:repeating-linear-gradient(0deg,rgba(255,210,70,0.45) 0 2px,transparent 2px 4px),repeating-linear-gradient(90deg,rgba(255,210,70,0.45) 0 2px,transparent 2px 4px);image-rendering:pixelated;transform-origin:bottom center;";
     cool.appendChild(sweep);
+    const pl = document.createElement("div");
+    pl.style.cssText = "position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none;overflow:visible;";
     topCard.appendChild(cool);
+    topCard.appendChild(pl);
     cooldownSweep = sweep;
+    particleLayerRef = pl;
     deckArea.appendChild(stack);
   }
 
@@ -335,12 +340,40 @@ const cards = s.deck;
   });
 
   // cooldown sweep driver
+  let lastParticleSpawn = 0;
+  function spawnParticle() {
+    const layer = particleLayerRef;
+    if (!layer) return;
+    const p = document.createElement("div");
+    const size = 2 + Math.floor(Math.random() * 2);
+    const w = layer.clientWidth || 58;
+    const x = Math.floor(Math.random() * Math.max(1, w - size));
+    const colors = ["rgba(255,225,90,0.9)", "rgba(255,190,50,0.8)", "rgba(255,240,140,0.9)"];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    p.style.cssText = `position:absolute;left:${x}px;bottom:0;width:${size}px;height:${size}px;background:${color};image-rendering:pixelated;pointer-events:none;`;
+    layer.appendChild(p);
+    const rise = 18 + Math.floor(Math.random() * 26);
+    const anim = p.animate([
+      { transform: "translateY(0)", opacity: 1 },
+      { transform: `translateY(-${rise}px)`, opacity: 0 },
+    ], { duration: 500 + Math.floor(Math.random() * 400), easing: "steps(8,end)", fill: "forwards" });
+    anim.onfinish = () => { try { p.remove(); } catch {} };
+    anim.oncancel = () => { try { p.remove(); } catch {} };
+  }
   function updateCooldown(): void {
     if (cooldownSweep) {
       const s = sim.state as any;
       const remaining = Math.max(0, (s?.nextDrawAt ?? 0) - (s?.levelTime ?? 0));
       const frac = Math.min(1, remaining / 5);
       cooldownSweep.style.height = (frac * 100) + "%";
+      // particles only while cooling down
+      if (frac > 0) {
+        const now = performance.now();
+        if (now - lastParticleSpawn > 160) {
+          lastParticleSpawn = now;
+          spawnParticle();
+        }
+      }
     }
     requestAnimationFrame(updateCooldown);
   }
