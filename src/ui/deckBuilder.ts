@@ -2,6 +2,7 @@ import { GameController } from "../game";
 import { CARDS, getCard } from "../config/cards";
 import { UNLOCKS, canPurchase } from "../config/unlocks";
 import { renderCardCanvas } from "../sprites/cardSprite";
+import { mountScreen } from "./screen";
 
 const MAX_DECK = 20;
 const MAX_COPIES = 3;
@@ -27,12 +28,12 @@ function borderColor(id: string): string {
 }
 
 export function openDeckBuilder(controller: GameController): void {
-  const root = document.getElementById("game")!;
   document.querySelectorAll(".deckbuilder").forEach((e) => e.remove());
 
-  const overlay = document.createElement("div");
-  overlay.className = "deckbuilder";
-  overlay.style.cssText = "position:fixed;top:0;left:0;right:0;height:100vh;height:100dvh;z-index:20;display:flex;flex-direction:column;background:#1a1408;font-family:monospace;color:#e8d9a8;overflow:hidden;";
+  const overlay = mountScreen(
+    "deckbuilder",
+    "z-index:20;display:flex;flex-direction:column;background:#1a1408;font-family:monospace;color:#e8d9a8;overflow:hidden;",
+  );
 
   // wood texture
   const tex = document.createElement("div");
@@ -45,9 +46,17 @@ export function openDeckBuilder(controller: GameController): void {
 
   function save() { controller.meta.state.deck = [...deck]; controller.meta.persist(); }
 
+  function close() {
+    save();
+    window.removeEventListener("keydown", onKey);
+    overlay.remove();
+  }
+  function onKey(e: KeyboardEvent) { if (e.key === "Escape") close(); }
+  window.addEventListener("keydown", onKey);
+
   // --- top bar ---
   const top = document.createElement("div");
-  top.style.cssText = "position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:6px 8px;height:44px;background:#2a1a0a;border-bottom:2px solid #0a0604;box-sizing:border-box;";
+  top.style.cssText = "position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding-top:calc(6px + env(safe-area-inset-top));padding-right:8px;padding-bottom:6px;padding-left:8px;min-height:44px;background:#2a1a0a;border-bottom:2px solid #0a0604;box-sizing:border-box;flex:0 0 auto;";
   const mkPlaque = (label: string, onClick: () => void) => {
     const b = document.createElement("button");
     b.textContent = label;
@@ -55,7 +64,12 @@ export function openDeckBuilder(controller: GameController): void {
     b.onclick = onClick;
     return b;
   };
-  const backBtn = mkPlaque("返回", () => { save(); overlay.remove(); });
+  const backBtn = mkPlaque("← 返回", () => close());
+  backBtn.style.background = "#8b6914";
+  backBtn.style.color = "#fff3d0";
+  backBtn.style.fontWeight = "bold";
+  backBtn.style.fontSize = "12px";
+  backBtn.style.padding = "6px 10px";
   const saveBtn = mkPlaque("保存", () => { save(); flash("已保存"); });
   const filterBtn = mkPlaque("筛选", () => { /* placeholder */ });
   const mid = document.createElement("div");
@@ -72,7 +86,7 @@ export function openDeckBuilder(controller: GameController): void {
 
   // --- upper deck area ---
   const deckWrap = document.createElement("div");
-  deckWrap.style.cssText = "position:relative;z-index:2;flex:0 0 150px;padding:6px;overflow-x:auto;overflow-y:hidden;white-space:nowrap;background:rgba(0,0,0,0.25);";
+  deckWrap.style.cssText = "position:relative;z-index:2;flex:0 0 150px;padding:6px;overflow-x:auto;overflow-y:hidden;white-space:nowrap;background:rgba(0,0,0,0.25);box-sizing:border-box;";
   const deckRow = document.createElement("div");
   deckRow.style.cssText = "display:inline-flex;gap:6px;align-items:center;height:100%;";
   deckWrap.appendChild(deckRow);
@@ -91,7 +105,7 @@ export function openDeckBuilder(controller: GameController): void {
 
   // --- collection grid ---
   const grid = document.createElement("div");
-  grid.style.cssText = "position:relative;z-index:2;flex:1;overflow-y:auto;padding:6px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-content:start;";
+  grid.style.cssText = "position:relative;z-index:2;flex:1;min-height:0;overflow-y:auto;padding:6px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-content:start;";
   overlay.appendChild(grid);
 
   // --- toast ---
@@ -244,7 +258,5 @@ export function openDeckBuilder(controller: GameController): void {
     });
   }
 
-  root.style.position = "relative";
-  root.appendChild(overlay);
   render();
 }

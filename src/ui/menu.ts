@@ -3,17 +3,15 @@ import { GameController } from "../game";
 import { CARDS } from "../config/cards";
 import { UNLOCKS } from "../config/unlocks";
 import { openDeckBuilder } from "./deckBuilder";
+import { gameRoot, mountScreen } from "./screen";
 
 export function showMenu(controller: GameController, onStart: (generalId: string) => void): void {
-  const root = document.getElementById("game")!;
-  root.querySelectorAll(".overlay").forEach((e) => e.remove());
+  gameRoot().querySelectorAll(".overlay").forEach((e) => e.remove());
 
   const W = 360;
   const H = 780;
 
-  const overlay = document.createElement("div");
-  overlay.className = "overlay";
-  overlay.style.cssText = "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#1a1408;z-index:10;overflow:hidden;";
+  const overlay = mountScreen("overlay", "z-index:10;display:flex;align-items:center;justify-content:center;background:#1a1408;overflow:hidden;");
 
   const canvas = document.createElement("canvas");
   canvas.width = W;
@@ -295,6 +293,4 @@ export function showMenu(controller: GameController, onStart: (generalId: string
   });
 
   overlay.appendChild(canvas);
-  root.style.position = "relative";
-  root.appendChild(overlay);
 }

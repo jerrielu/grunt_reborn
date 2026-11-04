@@ -12,9 +12,12 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <title>小兵重来 · Grunt Reborn</title>
     <style>
-      html, body { margin: 0; padding: 0; width: 100%; height: 100%; height: 100dvh; overflow: hidden; background: #1a1408; }
+      html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #1a1408; overscroll-behavior: none; }
       canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
-      #game { width: 100vw; width: 100dvw; height: 100vh; height: 100dvh; max-width: 100vw; max-height: 100vh; max-height: 100dvh; position: relative; overflow: hidden; background: #1a1408; }
+      /* 全屏的唯一来源：fixed + inset:0 跟随真实视口，不依赖 vh/dvh */
+      #game { position: fixed; inset: 0; overflow: hidden; background: #1a1408; }
+      /* 约定：任何全屏页面/覆盖层都挂到 #game 下并标记 .screen，自动铺满，不再各写一套尺寸 */
+      #game > .screen { position: absolute; inset: 0; }
     </style>
   </head>
   <body>
