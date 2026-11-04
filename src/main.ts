@@ -39,11 +39,11 @@ function startRun(generalId: string): void {
     const btn = document.createElement("button");
     btn.textContent = "返回轮回殿";
     btn.style.cssText = "margin:6px;padding:10px 20px;font-size:16px;cursor:pointer;";
-    btn.onclick = () => { overlay.remove(); game.scene.stop("BattleScene"); showMenu(startRun); };
+    btn.onclick = () => { overlay.remove(); game.scene.stop("BattleScene"); showMenu(controller, startRun); };
     overlay.appendChild(btn);
     document.getElementById("game")!.appendChild(overlay);
   });
 }
 
-showMenu(startRun);
+showMenu(controller, startRun);
 export { controller };
