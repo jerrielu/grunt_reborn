@@ -100,7 +100,7 @@ export class BattleScene extends Phaser.Scene {
       const u = this.findUnit(id);
       if (u) c.setY(u.y + bob);
     }
-    this.cameras.main.centerOn(hero.x, hero.y);
+    // fixed camera: no follow, view stays within arena bounds
   }
 
   syncUnits(): void {
