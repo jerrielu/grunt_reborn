@@ -5,6 +5,8 @@ import { UNLOCKS } from "../config/unlocks";
 import { openDeckBuilder } from "./deckBuilder";
 import { gameRoot, mountScreen } from "./screen";
 
+declare const __APP_VERSION__: string;
+
 export function showMenu(controller: GameController, onStart: (generalId: string) => void): void {
   gameRoot().querySelectorAll(".overlay").forEach((e) => e.remove());
 
@@ -171,6 +173,16 @@ export function showMenu(controller: GameController, onStart: (generalId: string
       octx.font = "bold 11px monospace";
       octx.textAlign = "center";
       octx.fillText("返回", backRect.x + backRect.w / 2, backRect.y + backRect.h / 2);
+    }
+
+    if (screen === "main") {
+      octx.textAlign = "left";
+      octx.textBaseline = "bottom";
+      octx.fillStyle = "#ffffff";
+      octx.font = "9px monospace";
+      octx.fillText("v" + __APP_VERSION__, 6, H - 4);
+      octx.textAlign = "center";
+      octx.textBaseline = "middle";
     }
 
     const img = octx.getImageData(0, 0, W, H);
