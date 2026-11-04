@@ -116,11 +116,11 @@ export class BattleScene extends Phaser.Scene {
         c = this.add.container(u.x, u.y);
         const texKey = (u.side === "hero" && this.sim.state.generalId === "vanguard") ? "vanguard" : "hero";
         const sprite = this.add.image(0, 0, texKey);
-         sprite.setScale(0.64);
+         sprite.setScale(0.448);
         if (u.side === "enemy") sprite.setTint(0xaa4444);
         else if (u.side === "summon") sprite.setTint(0x44aa44);
         c.add(sprite);
-        const label = this.add.text(0, -18, u.name, { fontSize: "8px", color: "#fff", fontFamily: "monospace" }).setOrigin(0.5);
+        const label = this.add.text(0, -13, u.name, { fontSize: "8px", color: "#fff", fontFamily: "monospace" }).setOrigin(0.5);
         c.add(label);
         this.unitSprites.set(u.id, c);
         const hb = this.add.graphics();
@@ -130,9 +130,9 @@ export class BattleScene extends Phaser.Scene {
       const hb = this.hpBars.get(u.id)!;
       hb.clear();
       hb.fillStyle(0x222222, 0.8);
-      hb.fillRect(u.x - 12, u.y - 26, 24, 4);
+      hb.fillRect(u.x - 8, u.y - 18, 17, 3);
       hb.fillStyle(0x44ff44, 1);
-      hb.fillRect(u.x - 12, u.y - 26, 24 * (u.hp / u.maxHp), 4);
+      hb.fillRect(u.x - 8, u.y - 18, 17 * (u.hp / u.maxHp), 3);
     }
   }
 }

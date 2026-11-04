@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 
-const TILE = 20;
+const TILE = 14;
 const FLOWER_COLORS = [0xffcc44, 0xff66aa, 0x88ccff, 0xffffff, 0xff8844, 0xcc66ff, 0x66ffaa, 0xff4444];
 
 export class TileFactory {
