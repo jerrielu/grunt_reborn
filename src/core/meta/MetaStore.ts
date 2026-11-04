@@ -1,4 +1,5 @@
 import type { SaveAdapter } from "./SaveAdapter";
+import { CARDS } from "../../config/cards";
 
 export interface GlobalBonus { id: string; name: string; tier: number; maxTier: number; cost: (tier: number) => number; }
 
@@ -22,7 +23,7 @@ const DEFAULT_META: MetaState = {
   bestLevel: 0,
   totalPointsEarned: 0,
   unlockedGenerals: ["shoucheng"],
-  unlockedCards: ["omnislash"],
+  unlockedCards: CARDS.map((c) => c.id),
   deck: [],
   globalBonuses: {},
   tutorialDone: false,

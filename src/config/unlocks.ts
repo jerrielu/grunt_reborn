@@ -15,7 +15,7 @@ export const UNLOCKS: UnlockDef[] = [
 ];
 
 export function canPurchase(meta: { unlockedGenerals: string[]; unlockedCards: string[]; globalBonuses: Record<string, number>; points: number }, def: UnlockDef): boolean {
-  if (meta.points < def.cost) return false;
+  if (def.type !== "card" && meta.points < def.cost) return false;
   if (def.type === "general" && meta.unlockedGenerals.includes(def.id)) return false;
   if (def.type === "card" && meta.unlockedCards.includes(def.id)) return false;
   return true;

@@ -57,7 +57,7 @@ export class GameController {
     const def = UNLOCKS.find((u) => u.id === id);
     if (!def) return false;
     if (!canPurchase(this.meta.state, def)) return false;
-    if (!this.meta.spendPoints(def.cost)) return false;
+    if (def.type !== "card" && !this.meta.spendPoints(def.cost)) return false;
     this.meta.applyUnlock(def);
     this.meta.persist();
     return true;
