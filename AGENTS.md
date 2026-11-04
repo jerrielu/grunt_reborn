@@ -30,5 +30,4 @@ This game is designed for mobile phone in portrait mode.
 
 ## Git
 
-- Commit locally for every meaningful change, but do not push for every commit.
-- At the end of the job completion, push in the final commit (which includes the version number update).
+- Always remember and must commit and push at the end.
