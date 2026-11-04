@@ -12,11 +12,11 @@ describe("MetaStore isolation & persistence", () => {
     const adapter = new NodeAdapter(path);
     const m1 = new MetaStore(adapter);
     m1.addPoints(150);
-    m1.unlockCard("frenzy");
+    m1.unlockCard("omnislash");
     m1.persist();
     const m2 = new MetaStore(adapter);
     expect(m2.state.points).toBe(150);
-    expect(m2.state.unlockedCards).toContain("frenzy");
+    expect(m2.state.unlockedCards).toContain("omnislash");
     rmSync(dir, { recursive: true });
   });
 });

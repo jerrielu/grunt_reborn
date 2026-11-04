@@ -4,7 +4,7 @@ import { runHeadless } from "./headlessRunner";
 describe("E2E scenario 4: tactic overwrite", () => {
   it("last tactic wins behavior", () => {
     const { sim, transcript } = runHeadless(2, "shoucheng", { maxLevels: 1, maxRounds: 1 });
-    sim.playCard("charge");
-    expect(transcript.some((l) => l.includes("charge"))).toBe(true);
+    sim.playCard("omnislash");
+    expect(transcript.some((l) => l.includes("omnislash"))).toBe(true);
   });
 });

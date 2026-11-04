@@ -26,9 +26,8 @@ export function runHeadless(seed: number, generalId: string, opts: { maxLevels?:
       continue;
     }
     if (state.phase === "reward") {
-      const choices = state.rewardChoices.length ? state.rewardChoices : ["charge"];
-      // pick first available from deck? just pick first choice (or a card)
-      const pick = choices[0] ?? "charge";
+      const choices = state.rewardChoices.length ? state.rewardChoices : ["omnislash"];
+      const pick = choices[0] ?? "omnislash";
       sim.confirmReward(pick);
       levelsDone++;
       continue;

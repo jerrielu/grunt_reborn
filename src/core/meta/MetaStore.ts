@@ -22,7 +22,7 @@ const DEFAULT_META: MetaState = {
   bestLevel: 0,
   totalPointsEarned: 0,
   unlockedGenerals: ["shoucheng"],
-  unlockedCards: ["steady", "guard", "heavyArmor", "firstAid", "summonFootman", "spear"],
+  unlockedCards: ["omnislash"],
   deck: [],
   globalBonuses: {},
   tutorialDone: false,

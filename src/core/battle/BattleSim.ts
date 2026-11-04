@@ -30,9 +30,9 @@ export function createRunState(seed: number, generalId: string): RunState {
   const hero = makeHero(1, generalId);
   const wavesTotal = 3 + Math.min(2, Math.floor(0 / 2));
   const starterMap: Record<string, string[]> = {
-    shoucheng: ["steady", "guard", "heavyArmor", "firstAid", "summonFootman", "spear"],
-    vanguard: ["charge", "frenzy", "assassinate", "dagger", "swiftBoots", "shockwave"],
-    summoner: ["summonFootman", "summonShieldman", "summonSpearman", "summonRally", "guard", "disrupt"],
+    shoucheng: ["omnislash"],
+    vanguard: ["omnislash"],
+    summoner: ["omnislash"],
   };
   const starterIds = starterMap[generalId] ?? starterMap.shoucheng;
   const deck = starterIds.map((defId, i) => ({ instanceId: 100 + i, defId }));
@@ -268,42 +268,43 @@ export class BattleSim {
     // attack
     h.attackCooldown = Math.max(0, h.attackCooldown - dt);
     if (target && distance(h, target) <= h.attackRange + 4 && h.attackCooldown <= 0) {
-      const intervalMul = h.attackIntervalMul * (tactics.some(t => t.name === "狂攻") ? 0.6 : 1); // simplified; real via buff mods
+      const intervalMul = h.attackIntervalMul * (tactics.some(t => t.name === "狂攻") ? 0.6 : 1);
       const dmgMul = h.damageDealtMul * s.roundBuffs.heroDamageBoost;
-      // backstab check for 寻隙
       let backstab = false;
       if (activeBehavior === "lurk") {
-        // enemy facing points toward hero; back = opposite. Check if hero is behind target
         const ex = target.x, ey = target.y;
         const fx = Math.cos(target.facing), fy = Math.sin(target.facing);
-        // vector from enemy to hero
         const vx = h.x - ex, vy = h.y - ey;
         const dot = vx * fx + vy * fy;
-        if (dot < 0) backstab = true; // hero is behind (opposite facing)
+        if (dot < 0) backstab = true;
       }
-      const dmg = Math.round(h.attackDamage * dmgMul * (backstab ? 1.35 : 1));
-      const res = applyDamage(target, dmg, 1);
+      const omniEquipped = s.equipment.weapon === "omnislash";
+      const omniTrigger = omniEquipped && this.rng.next() < 0.25;
       h.attackCooldown = h.attackInterval * intervalMul;
-      // lifesteal for 稳扎
-      if (tactics.some(t => t.behavior === "steady")) {
-        heal(h, Math.max(1, Math.round(dmg * 0.05)));
-      }
-      this.emit("hero.attack", { targetId: target.id, dmg, killed: res.killed, backstab });
-      if (res.killed) {
-        this.onEnemyKilled(target as EnemyUnit);
-      }
-      // 浴血 auto-skill: low hp aoe slam once per round
-      const bath = tactics.find(t => t.autoSkill === "aoeSlamOnLowHp");
-      if (bath && !bath.autoSkillUsedThisRound && h.hp / h.maxHp < 0.2) {
-        bath.autoSkillUsedThisRound = true;
-        // aoe damage to enemies within 80
-        for (const e of s.enemies) {
-          if (!e.alive) continue;
-          if (distance(h, e) <= 80) {
-            const r = applyDamage(e, h.attackDamage * 2, 1);
-            this.emit("hero.autoSkill", { skill: "aoeSlam", targetId: e.id, dmg: h.attackDamage * 2, killed: r.killed });
-            if (r.killed) this.onEnemyKilled(e);
+      if (omniTrigger) {
+        const hits = 5;
+        let cur: Unit | null = target;
+        for (let i = 0; i < hits; i++) {
+          if (!cur || !cur.alive) {
+            const aliveEnemies = s.enemies.filter((e) => e.alive);
+            cur = aliveEnemies.length ? findNearest(h, aliveEnemies) : null;
           }
+          if (!cur) break;
+          const dmg = Math.round(h.attackDamage * dmgMul);
+          const r = applyDamage(cur, dmg, 1);
+          this.emit("hero.attack", { targetId: cur.id, dmg, killed: r.killed, backstab: false, omni: true });
+          if (r.killed && cur.side === "enemy") this.onEnemyKilled(cur as EnemyUnit);
+          if (r.killed) cur = null;
+        }
+      } else {
+        const dmg = Math.round(h.attackDamage * dmgMul * (backstab ? 1.35 : 1));
+        const res = applyDamage(target, dmg, 1);
+        if (tactics.some(t => t.behavior === "steady")) {
+          heal(h, Math.max(1, Math.round(dmg * 0.05)));
+        }
+        this.emit("hero.attack", { targetId: target.id, dmg, killed: res.killed, backstab });
+        if (res.killed) {
+          this.onEnemyKilled(target as EnemyUnit);
         }
       }
     }
@@ -433,7 +434,7 @@ export class BattleSim {
     const healAmt = Math.round(s.hero.maxHp * 0.3);
     heal(s.hero, healAmt);
     // reward choices: 3 distinct cards from a small pool
-    const pool = ["charge", "guard", "assassinate", "frenzy", "spear", "firstAid", "summonFootman", "shockwave"];
+    const pool = ["omnislash"];
     const rng = this.rng;
     const picks: string[] = [];
     const avail = [...pool];
