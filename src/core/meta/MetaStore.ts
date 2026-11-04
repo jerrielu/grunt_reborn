@@ -42,6 +42,11 @@ export class MetaStore {
     } else {
       this.state = { ...DEFAULT_META };
     }
+    // migrate: all cards are free/unlocked; drop stale card ids from old versions
+    const validIds = new Set(CARDS.map((c) => c.id));
+    this.state.unlockedCards = Array.from(new Set([...CARDS.map((c) => c.id), ...(this.state.unlockedCards ?? []).filter((id) => validIds.has(id))]));
+    this.state.deck = (this.state.deck ?? []).filter((id) => validIds.has(id));
+    this.adapter.save(JSON.stringify(this.state));
   }
 
   persist(): void { this.adapter.save(JSON.stringify(this.state)); }

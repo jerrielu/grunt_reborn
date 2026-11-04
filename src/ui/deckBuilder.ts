@@ -41,8 +41,8 @@ export function openDeckBuilder(controller: GameController): void {
   overlay.appendChild(tex);
 
   let activeCat = "全部";
-  let deck: string[] = [...(controller.meta.state.deck ?? [])];
-  if (deck.length === 0) deck = ["steady", "guard", "heavyArmor", "firstAid", "summonFootman", "spear"];
+  let deck: string[] = [...(controller.meta.state.deck ?? [])].filter((id) => !!getCard(id));
+  if (deck.length === 0) deck = ["omnislash"];
 
   function save() { controller.meta.state.deck = [...deck]; controller.meta.persist(); }
 
@@ -159,9 +159,9 @@ export function openDeckBuilder(controller: GameController): void {
     const def = getCard(id);
     const unlocked = controller.meta.state.unlockedCards.includes(id);
     if (!unlocked) {
-      const u = UNLOCKS.find((x) => x.id === id);
-      if (u && controller.buyUnlock(u.id)) { flash("已解锁"); }
-      else { flash("积分不足"); return; }
+      controller.meta.unlockCard(id);
+      controller.meta.persist();
+      flash("已解锁");
     }
     deck.push(id);
     save();

@@ -252,11 +252,9 @@ export function showMenu(controller: GameController, onStart: (generalId: string
       if (!c) return;
       const unlocked = controller.meta.state.unlockedCards.includes(c.id);
       if (!unlocked) {
-        const def = UNLOCKS.find((u) => u.id === c.id);
-        if (def) {
-          const ok = controller.buyUnlock(def.id);
-          if (ok) refresh();
-        }
+        controller.meta.unlockCard(c.id);
+        controller.meta.persist();
+        refresh();
       }
     }
   }
