@@ -208,6 +208,17 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     float.style.top = startTop + "px";
     root.appendChild(float);
 
+    // sparkle flash at draw point
+    const flash = document.createElement("div");
+    flash.style.cssText = "position:absolute;z-index:23;pointer-events:none;left:" + (startLeft + 31) + "px;top:" + (startTop + 47) + "px;width:8px;height:8px;margin-left:-4px;margin-top:-4px;background:radial-gradient(circle,rgba(255,230,120,1) 0%,rgba(255,180,40,0.7) 40%,transparent 75%);image-rendering:pixelated;";
+    root.appendChild(flash);
+    const flashAnim = flash.animate([
+      { transform: "scale(1)", opacity: 1 },
+      { transform: "scale(6)", opacity: 0 },
+    ], { duration: 320, easing: "steps(6,end)", fill: "forwards" });
+    flashAnim.onfinish = () => { try { flash.remove(); } catch {} };
+    flashAnim.oncancel = () => { try { flash.remove(); } catch {} };
+
     const midLeft = (startLeft + endLeft) / 2;
     const midTop = Math.min(startTop, endTop) - 30;
     const anim = float.animate([
@@ -262,12 +273,12 @@ const cards = s.deck;
       c.style.cssText = `position:absolute;left:${i * 2}px;top:${i * 2}px;width:62px;height:94px;background:#222;border:1px solid #555;image-rendering:pixelated;`;
       stack.appendChild(c);
     }
-    // cooldown sweep on the top card back
+    // cooldown sweep on the top card back (golden, pixel-ish)
     const topCard = stack.lastElementChild as HTMLElement;
     const cool = document.createElement("div");
-    cool.style.cssText = "position:absolute;left:0;right:0;bottom:0;height:100%;pointer-events:none;overflow:hidden;background:rgba(0,0,0,0.35);";
+    cool.style.cssText = "position:absolute;left:2px;right:2px;top:2px;bottom:2px;pointer-events:none;overflow:hidden;";
     const sweep = document.createElement("div");
-    sweep.style.cssText = "position:absolute;left:0;bottom:0;width:100%;height:100%;background:linear-gradient(180deg,rgba(120,200,255,0.6) 0%,rgba(120,200,255,0.15) 100%);transform-origin:bottom center;";
+    sweep.style.cssText = "position:absolute;left:0;bottom:0;width:100%;height:100%;background:repeating-linear-gradient(180deg,rgba(255,200,60,0.85) 0 2px,rgba(210,150,30,0.7) 2px 4px);image-rendering:pixelated;transform-origin:bottom center;";
     cool.appendChild(sweep);
     topCard.appendChild(cool);
     cooldownSweep = sweep;
