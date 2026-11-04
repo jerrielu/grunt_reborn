@@ -279,7 +279,7 @@ export class BattleSim {
         if (dot < 0) backstab = true;
       }
       const omniEquipped = s.equipment.weapon === "omnislash";
-      const omniTrigger = omniEquipped && this.rng.next() < 0.25;
+       const omniTrigger = omniEquipped && this.rng.next() < 1.0;
       h.attackCooldown = h.attackInterval * intervalMul;
       if (omniTrigger) {
         const hits = 5;
