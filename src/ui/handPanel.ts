@@ -31,6 +31,8 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
   let pendingRender = false;
   let isDrawing = false;
   let dragState: { defId: string; startY: number; el: HTMLElement; moved: boolean } | null = null;
+  let manualDrawTarget: { left: number; top: number } | null = null;
+  let deckDrag: { startY: number; moved: boolean; pointerId: number } | null = null;
   let cooldownSweep: HTMLElement | null = null;
   let particleLayerRef: HTMLElement | null = null;
 
@@ -180,7 +182,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     return wrap;
   }
 
-  function animateDraw(defId: string): void {
+  function animateDraw(defId: string, targetLeft?: number, targetTop?: number): void {
     isDrawing = true;
     const deckRect = deckArea.getBoundingClientRect();
     const rootRect = root.getBoundingClientRect();
@@ -195,8 +197,8 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     const offset = ((n - 1) / 2) * spacing;
     const startLeft = deckRect.left - rootRect.left + deckRect.width / 2 - 31;
     const startTop = deckRect.top - rootRect.top + deckRect.height / 2 - 47;
-    const endLeft = handRect.left - rootRect.left + handRect.width / 2 + offset - 31;
-    const endTop = handRect.bottom - rootRect.top - 98;
+    const endLeft = (targetLeft !== undefined) ? targetLeft : (handRect.left - rootRect.left + handRect.width / 2 + offset - 31);
+    const endTop = (targetTop !== undefined) ? targetTop : (handRect.bottom - rootRect.top - 98);
 
     const float = document.createElement("div");
     float.style.cssText = "position:absolute;z-index:22;pointer-events:none;display:flex;flex-direction:column;align-items:center;";
@@ -316,7 +318,36 @@ const cards = s.deck;
   window.addEventListener("pointerup", onGlobalPointerUp);
   window.addEventListener("pointercancel", () => { if (isDragging && dragState) finishDragAny(dragState.startY); });
 
-  sim.events.on("card.drawn", (e) => { animateDraw(e.data.defId as string); });
+  // manual draw gesture on deck pile (same as play: slide up)
+  deckArea.addEventListener("pointerdown", (e) => {
+    deckDrag = { startY: e.clientY, moved: false, pointerId: e.pointerId };
+    try { deckArea.setPointerCapture(e.pointerId); } catch {}
+  });
+  deckArea.addEventListener("pointermove", (e) => {
+    if (!deckDrag) return;
+    if (e.clientY < deckDrag.startY - 10) deckDrag.moved = true;
+  });
+  const finishDeckDrag = (endY: number, endX: number) => {
+    if (!deckDrag) return;
+    const dd = deckDrag;
+    deckDrag = null;
+    const dy = endY - dd.startY;
+    console.log("[carddraw] drag end", "dy=", dy, "moved=", dd.moved);
+    if (dy < -40) {
+      const rootRect = root.getBoundingClientRect();
+      manualDrawTarget = { left: endX - rootRect.left - 31, top: endY - rootRect.top - 47 };
+      sim.drawCard();
+    }
+  };
+  deckArea.addEventListener("pointerup", (e) => { finishDeckDrag(e.clientY, e.clientX); });
+  deckArea.addEventListener("pointercancel", () => { if (deckDrag) finishDeckDrag(deckDrag.startY, 0); });
+
+  sim.events.on("card.drawn", (e) => {
+    const tgt = manualDrawTarget;
+    manualDrawTarget = null;
+    if (tgt) animateDraw(e.data.defId as string, tgt.left, tgt.top);
+    else animateDraw(e.data.defId as string);
+  });
   sim.events.on("card.played", () => render());
   sim.events.on("card.rejected", () => render());
   sim.events.on("level.start", () => render());

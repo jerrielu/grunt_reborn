@@ -91,8 +91,6 @@ export class BattleSim {
     (s as any)._hpMul = hpMul;
     (s as any)._atkMul = atkMul;
     this.emit("level.start", { level: s.level, waves: s.wavesTotal });
-    s.nextDrawAt = 5;
-    this.drawCard();
     this.emit("phase.changed", { phase: "fight" });
   }
 
@@ -159,11 +157,7 @@ export class BattleSim {
       this.levelClear();
     }
 
-    // automatic card draw every 5s
-    if (s.levelTime >= s.nextDrawAt) {
-      this.drawCard();
-      s.nextDrawAt += 5;
-    }
+    // manual card draw: no automatic draw
   }
 
   private allUnits(): Unit[] {
