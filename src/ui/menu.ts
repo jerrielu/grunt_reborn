@@ -162,15 +162,17 @@ export function showMenu(controller: GameController, onStart: (generalId: string
     });
 
     const isBackHover = hoveredBack;
-    ctx.fillStyle = isBackHover ? "#4a4a8e" : "#2a2a4e";
-    ctx.fillRect(backRect.x, backRect.y, backRect.w, backRect.h);
-    ctx.strokeStyle = "#ffffff";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(backRect.x + 0.5, backRect.y + 0.5, backRect.w - 1, backRect.h - 1);
-    octx.fillStyle = "#ffffff";
-    octx.font = "bold 11px monospace";
-    octx.textAlign = "center";
-    octx.fillText("返回", backRect.x + backRect.w / 2, backRect.y + backRect.h / 2);
+    if (screen !== "main") {
+      ctx.fillStyle = isBackHover ? "#4a4a8e" : "#2a2a4e";
+      ctx.fillRect(backRect.x, backRect.y, backRect.w, backRect.h);
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(backRect.x + 0.5, backRect.y + 0.5, backRect.w - 1, backRect.h - 1);
+      octx.fillStyle = "#ffffff";
+      octx.font = "bold 11px monospace";
+      octx.textAlign = "center";
+      octx.fillText("返回", backRect.x + backRect.w / 2, backRect.y + backRect.h / 2);
+    }
 
     const img = octx.getImageData(0, 0, W, H);
     const d = img.data;
@@ -206,6 +208,7 @@ export function showMenu(controller: GameController, onStart: (generalId: string
   }
 
   function hitBack(cx: number, cy: number): boolean {
+    if (screen === "main") return false;
     const r = backRect;
     return cx >= r.x && cx <= r.x + r.w && cy >= r.y && cy <= r.y + r.h;
   }
