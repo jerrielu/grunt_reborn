@@ -22,7 +22,7 @@ export class BattleScene extends Phaser.Scene {
     const key = TileFactory.ensureGroundTexture(this, w, h);
     const ground = this.add.image(0, 0, key).setOrigin(0, 0);
     const border = this.add.graphics();
-    border.lineStyle(4, 0x6a5a3a, 1);
+    border.lineStyle(4, 0xc9a86a, 1);
     border.strokeRect(2, 2, w - 4, h - 4);
     // camera
     this.cameras.main.setBounds(0, 0, w, h);

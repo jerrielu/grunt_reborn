@@ -13,7 +13,7 @@ export function showMenu(controller: GameController, onStart: (generalId: string
 
   const overlay = document.createElement("div");
   overlay.className = "overlay";
-  overlay.style.cssText = "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0a0a1e;z-index:10;overflow:hidden;";
+  overlay.style.cssText = "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#1a1408;z-index:10;overflow:hidden;";
 
   const canvas = document.createElement("canvas");
   canvas.width = W;
@@ -79,7 +79,7 @@ export function showMenu(controller: GameController, onStart: (generalId: string
 
   function draw() {
     ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = "#0a0a1e";
+    ctx.fillStyle = "#1a1408";
     ctx.fillRect(0, 0, W, H);
 
     const off = document.createElement("canvas");
@@ -93,31 +93,31 @@ export function showMenu(controller: GameController, onStart: (generalId: string
 
     const rects = currentRects();
 
-    octx.fillStyle = "#ffffff";
+    octx.fillStyle = "#e8d9a8";
     octx.font = "bold 44px monospace";
     if (screen === "main") octx.fillText("小兵重来", W / 2, 104);
     else if (screen === "generals") octx.fillText("选择武将", W / 2, 104);
     else octx.fillText("卡牌构筑", W / 2, 104);
 
     if (screen === "main") {
-      octx.fillStyle = "#aaaacc";
+      octx.fillStyle = "#c9a86a";
       octx.font = "20px monospace";
       octx.fillText("轮回积分: " + controller.meta.state.points, W / 2, 160);
     } else if (screen === "generals") {
-      octx.fillStyle = "#aaaacc";
+      octx.fillStyle = "#c9a86a";
       octx.font = "20px monospace";
       octx.fillText("选择武将开始闯关", W / 2, 160);
     } else {
-      octx.fillStyle = "#aaaacc";
+      octx.fillStyle = "#c9a86a";
       octx.font = "16px monospace";
       octx.fillText("积分: " + controller.meta.state.points + "  点击锁定卡牌解锁", W / 2, 134);
     }
 
     rects.forEach((r, i) => {
       const isHover = hovered === i;
-      ctx.fillStyle = isHover ? "#4a4a8e" : "#2a2a4e";
+      ctx.fillStyle = isHover ? "#5a3a1a" : "#3a2410";
       ctx.fillRect(r.x, r.y, r.w, r.h);
-      ctx.strokeStyle = "#ffffff";
+      ctx.strokeStyle = "#c9a86a";
       ctx.lineWidth = 1;
       ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
     });
@@ -127,16 +127,16 @@ export function showMenu(controller: GameController, onStart: (generalId: string
         const c = CARDS[i];
         const unlocked = controller.meta.state.unlockedCards.includes(c.id);
         const isHover = hovered === i;
-        ctx.fillStyle = isHover ? "#3a3a6e" : "#1e1e3e";
+        ctx.fillStyle = isHover ? "#3a2410" : "#2a1a0a";
         ctx.fillRect(r.x, r.y, r.w, r.h);
-        ctx.strokeStyle = unlocked ? "#66cc66" : "#888888";
+        ctx.strokeStyle = unlocked ? "#c9a86a" : "#888888";
         ctx.lineWidth = 1;
         ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
       });
     }
 
     rects.forEach((r, i) => {
-      octx.fillStyle = "#ffffff";
+      octx.fillStyle = "#e8d9a8";
       octx.font = "bold 11px monospace";
       if (screen === "generals") {
         const gens = allGenerals.filter((gg) => controller.meta.state.unlockedGenerals.includes(gg.id));
@@ -150,11 +150,11 @@ export function showMenu(controller: GameController, onStart: (generalId: string
         const unlocked = controller.meta.state.unlockedCards.includes(c.id);
         octx.textAlign = "left";
         octx.font = "bold 10px monospace";
-        octx.fillStyle = "#ffffff";
+        octx.fillStyle = "#e8d9a8";
         octx.fillText(c.name, r.x + 6, r.y + r.h / 2);
         octx.textAlign = "right";
         octx.font = "9px monospace";
-        octx.fillStyle = unlocked ? "#66cc66" : "#ffaa66";
+        octx.fillStyle = unlocked ? "#c9a86a" : "#ffaa66";
         const unlockDef = UNLOCKS.find((u) => u.id === c.id);
         const cost = unlockDef ? unlockDef.cost : 0;
         octx.fillText(unlocked ? "已解锁" : (cost + "积分"), r.x + r.w - 6, r.y + r.h / 2);
@@ -164,12 +164,12 @@ export function showMenu(controller: GameController, onStart: (generalId: string
 
     const isBackHover = hoveredBack;
     if (screen !== "main") {
-      ctx.fillStyle = isBackHover ? "#4a4a8e" : "#2a2a4e";
+      ctx.fillStyle = isBackHover ? "#5a3a1a" : "#3a2410";
       ctx.fillRect(backRect.x, backRect.y, backRect.w, backRect.h);
-      ctx.strokeStyle = "#ffffff";
+      ctx.strokeStyle = "#c9a86a";
       ctx.lineWidth = 1;
       ctx.strokeRect(backRect.x + 0.5, backRect.y + 0.5, backRect.w - 1, backRect.h - 1);
-      octx.fillStyle = "#ffffff";
+      octx.fillStyle = "#e8d9a8";
       octx.font = "bold 11px monospace";
       octx.textAlign = "center";
       octx.fillText("返回", backRect.x + backRect.w / 2, backRect.y + backRect.h / 2);

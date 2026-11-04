@@ -15,7 +15,7 @@ export class TileFactory {
         const detailR = Math.random();
         const dirtR = Math.random();
         const pebbleR = Math.random();
-        const base = baseR < 0.4 ? 0x2a3a2a : baseR < 0.7 ? 0x2e402e : 0x263426;
+        const base = baseR < 0.4 ? 0x3a3020 : baseR < 0.7 ? 0x40362a : 0x342a1e;
         g.fillStyle(base, 1);
         g.fillRect(x, y, TILE, TILE);
         // flowers

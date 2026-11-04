@@ -326,7 +326,7 @@ const cards = s.deck;
   sim.events.on("level.cleared", (e) => {
     const choices = (e.data.choices as string[]) ?? [];
     const overlay = document.createElement("div");
-    overlay.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,10,30,0.9);color:#fff;font-family:sans-serif;z-index:11;";
+    overlay.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(26,20,8,0.9);color:#e8d9a8;font-family:monospace;z-index:11;";
     const h = document.createElement("h2"); h.textContent = `第 ${e.data.level} 关通关！回血 ${e.data.heal}`; overlay.appendChild(h);
     const row = document.createElement("div"); row.style.cssText = "display:flex;gap:10px;flex-wrap:wrap;justify-content:center;";
     for (const c of choices) {
