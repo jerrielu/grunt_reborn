@@ -3,8 +3,8 @@ export function showMenu(onStart: (generalId: string) => void): void {
   const root = document.getElementById("game")!;
   root.querySelectorAll(".overlay").forEach((e) => e.remove());
 
-  const W = 180;
-  const H = 390;
+  const W = 360;
+  const H = 780;
 
   const overlay = document.createElement("div");
   overlay.className = "overlay";
@@ -23,14 +23,14 @@ export function showMenu(onStart: (generalId: string) => void): void {
     { id: "summoner", label: "招魂将（召唤）" },
   ];
 
-  const btnW = 150;
-  const btnH = 28;
+  const btnW = 300;
+  const btnH = 56;
   const startX = Math.round((W - btnW) / 2);
-  let y0 = 118;
+  let y0 = 236;
   const rects: { id: string; x: number; y: number; w: number; h: number }[] = [];
   for (const g of generals) {
     rects.push({ id: g.id, x: startX, y: y0, w: btnW, h: btnH });
-    y0 += 38;
+    y0 += 76;
   }
 
   let hovered = -1;
@@ -48,8 +48,8 @@ export function showMenu(onStart: (generalId: string) => void): void {
       ctx.fillStyle = hovered === i ? "#4a4a8e" : "#2a2a4e";
       ctx.fillRect(r.x, r.y, r.w, r.h);
       ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
     });
 
     // Render text to an offscreen buffer then threshold alpha so glyphs become
@@ -64,17 +64,17 @@ export function showMenu(onStart: (generalId: string) => void): void {
     octx.clearRect(0, 0, W, H);
 
     octx.fillStyle = "#ffffff";
-    octx.font = "bold 22px monospace";
-    octx.fillText("小兵重来", W / 2, 52);
+    octx.font = "bold 44px monospace";
+    octx.fillText("小兵重来", W / 2, 104);
 
     octx.fillStyle = "#aaaacc";
-    octx.font = "11px monospace";
-    octx.fillText("选择武将开始闯关", W / 2, 80);
+    octx.font = "22px monospace";
+    octx.fillText("选择武将开始闯关", W / 2, 160);
 
     rects.forEach((r, i) => {
       const g = generals[i];
       octx.fillStyle = "#ffffff";
-      octx.font = "bold 11px monospace";
+      octx.font = "bold 22px monospace";
       octx.fillText(g.label, r.x + r.w / 2, r.y + r.h / 2);
     });
 
