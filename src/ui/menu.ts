@@ -23,14 +23,14 @@ export function showMenu(onStart: (generalId: string) => void): void {
     { id: "summoner", label: "招魂将（召唤）" },
   ];
 
-  const btnW = 140;
-  const btnH = 22;
+  const btnW = 150;
+  const btnH = 26;
   const startX = Math.round((W - btnW) / 2);
-  let y0 = 130;
+  let y0 = 120;
   const rects: { id: string; x: number; y: number; w: number; h: number }[] = [];
   for (const g of generals) {
     rects.push({ id: g.id, x: startX, y: y0, w: btnW, h: btnH });
-    y0 += 32;
+    y0 += 36;
   }
 
   let hovered = -1;
@@ -44,12 +44,12 @@ export function showMenu(onStart: (generalId: string) => void): void {
     ctx.textBaseline = "middle";
 
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 16px monospace";
-    ctx.fillText("小兵重来", W / 2, 56);
+    ctx.font = "bold 20px monospace";
+    ctx.fillText("小兵重来", W / 2, 52);
 
     ctx.fillStyle = "#aaaacc";
-    ctx.font = "8px monospace";
-    ctx.fillText("选择武将开始闯关", W / 2, 78);
+    ctx.font = "10px monospace";
+    ctx.fillText("选择武将开始闯关", W / 2, 80);
 
     rects.forEach((r, i) => {
       const g = generals[i];
@@ -59,7 +59,7 @@ export function showMenu(onStart: (generalId: string) => void): void {
       ctx.lineWidth = 1;
       ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
       ctx.fillStyle = "#ffffff";
-      ctx.font = "8px monospace";
+      ctx.font = "10px monospace";
       ctx.fillText(g.label, r.x + r.w / 2, r.y + r.h / 2);
     });
   }
