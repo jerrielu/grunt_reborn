@@ -23,12 +23,13 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
   panel.appendChild(handArea);
 
   const deckArea = document.createElement("div");
-  deckArea.style.cssText = "position:relative;flex:0 0 20%;height:100%;display:flex;align-items:center;justify-content:center;";
+  deckArea.style.cssText = "position:relative;flex:0 0 20%;height:100%;display:flex;align-items:flex-end;justify-content:center;";
   panel.appendChild(deckArea);
 
   let preview: HTMLElement | null = null;
   let isDragging = false;
   let pendingRender = false;
+  let isDrawing = false;
   let dragState: { defId: string; startY: number; el: HTMLElement; moved: boolean } | null = null;
 
   function closePreview() {
@@ -177,6 +178,53 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     return wrap;
   }
 
+  function animateDraw(defId: string): void {
+    isDrawing = true;
+    const deckRect = deckArea.getBoundingClientRect();
+    const rootRect = root.getBoundingClientRect();
+    const handRect = handArea.getBoundingClientRect();
+    const n = sim.state.deck.length;
+    const avail = handArea.clientWidth || Math.round(root.clientWidth * 0.8) || 314;
+    const cardW = 70; const cardH = 98; const maxSpacing = 29;
+    const spread = n > 8 ? 4 : n > 5 ? 6 : 10;
+    const maxAngle = ((n - 1) / 2) * spread * (Math.PI / 180);
+    const proj = cardW * Math.cos(maxAngle) + cardH * Math.sin(maxAngle);
+    const spacing = n <= 1 ? 0 : Math.min(maxSpacing, (avail - proj) / (n - 1));
+    const offset = ((n - 1) / 2) * spacing;
+    const startLeft = deckRect.left - rootRect.left + deckRect.width / 2 - 31;
+    const startTop = deckRect.top - rootRect.top + deckRect.height / 2 - 47;
+    const endLeft = handRect.left - rootRect.left + handRect.width / 2 + offset - 31;
+    const endTop = handRect.bottom - rootRect.top - 94;
+
+    const float = document.createElement("div");
+    float.style.cssText = "position:absolute;z-index:22;pointer-events:none;display:flex;flex-direction:column;align-items:center;";
+    const canvas = renderCardCanvas(defId);
+    const img = document.createElement("img");
+    img.src = canvas.toDataURL("image/png");
+    img.style.cssText = "width:62px;height:94px;image-rendering:pixelated;border:1px solid #333;box-shadow:0 2px 4px rgba(0,0,0,0.5);";
+    float.appendChild(img);
+    float.style.left = startLeft + "px";
+    float.style.top = startTop + "px";
+    root.appendChild(float);
+
+    const midLeft = (startLeft + endLeft) / 2;
+    const midTop = Math.min(startTop, endTop) - 30;
+    const anim = float.animate([
+      { left: startLeft + "px", top: startTop + "px", transform: "perspective(400px) rotateY(180deg) scale(0.85)", opacity: 1, offset: 0 },
+      { left: midLeft + "px", top: midTop + "px", transform: "perspective(400px) rotateY(90deg) scale(1)", opacity: 1, offset: 0.4 },
+      { left: endLeft + "px", top: endTop + "px", transform: "perspective(400px) rotateY(0deg) scale(1)", opacity: 1, offset: 1 },
+    ], { duration: 420, easing: "cubic-bezier(0.2,0.8,0.2,1)", fill: "forwards" });
+    const finish = () => {
+      try { anim.cancel(); } catch {}
+      float.remove();
+      isDrawing = false;
+      render();
+    };
+    anim.onfinish = finish;
+    anim.oncancel = finish;
+    window.setTimeout(() => { if (isDrawing) finish(); }, 500);
+  }
+
   function render(): void {
     if (isDragging) { pendingRender = true; console.log("[cardplay] render deferred (dragging)"); return; }
     handArea.innerHTML = "";
@@ -246,11 +294,11 @@ const cards = s.deck;
   window.addEventListener("pointerup", onGlobalPointerUp);
   window.addEventListener("pointercancel", () => { if (isDragging && dragState) finishDragAny(dragState.startY); });
 
-  sim.events.on("card.drawn", () => render());
+  sim.events.on("card.drawn", (e) => { animateDraw(e.data.defId as string); });
   sim.events.on("card.played", () => render());
   sim.events.on("card.rejected", () => render());
   sim.events.on("level.start", () => render());
-  sim.events.on("phase.changed", () => render());
+  sim.events.on("phase.changed", () => { if (!isDrawing) render(); });
 
   // reward modal
   sim.events.on("level.cleared", (e) => {
