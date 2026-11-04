@@ -25,8 +25,15 @@ export class GameController {
     state.hero.maxHp = Math.round(state.hero.maxHp * hpMul);
     state.hero.hp = state.hero.maxHp;
     state.hero.attackDamage = Math.round(state.hero.attackDamage * dmgMul);
-    // filter deck to unlocked cards only
-    state.deck = state.deck.filter((c) => this.meta.state.unlockedCards.includes(c.defId));
+    // build deck from saved deck (or starter) filtered to unlocked
+    const starterMap: Record<string, string[]> = {
+      shoucheng: ["steady", "guard", "heavyArmor", "firstAid", "summonFootman", "spear"],
+      vanguard: ["charge", "frenzy", "assassinate", "dagger", "swiftBoots", "shockwave"],
+      summoner: ["summonFootman", "summonShieldman", "summonSpearman", "summonRally", "guard", "disrupt"],
+    };
+    const base = (this.meta.state.deck && this.meta.state.deck.length > 0) ? this.meta.state.deck : (starterMap[generalId] ?? starterMap.shoucheng);
+    const ids = base.filter((id) => this.meta.state.unlockedCards.includes(id));
+    state.deck = ids.map((defId, i) => ({ instanceId: 100 + i, defId }));
     const sim = new BattleSim(state);
     this.sim = sim;
     return sim;

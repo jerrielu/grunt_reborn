@@ -2,6 +2,7 @@
 import { GameController } from "../game";
 import { CARDS } from "../config/cards";
 import { UNLOCKS } from "../config/unlocks";
+import { openDeckBuilder } from "./deckBuilder";
 
 export function showMenu(controller: GameController, onStart: (generalId: string) => void): void {
   const root = document.getElementById("game")!;
@@ -240,7 +241,7 @@ export function showMenu(controller: GameController, onStart: (generalId: string
   function handleSelect(i: number) {
     if (screen === "main") {
       if (i === 0) { screen = "generals"; hovered = -1; refresh(); }
-      else if (i === 1) { screen = "cards"; hovered = -1; refresh(); }
+      else if (i === 1) { openDeckBuilder(controller); }
     } else if (screen === "generals") {
       const gens = allGenerals.filter((gg) => controller.meta.state.unlockedGenerals.includes(gg.id));
       const g = gens[i];

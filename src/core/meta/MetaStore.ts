@@ -10,6 +10,7 @@ export interface MetaState {
   totalPointsEarned: number;
   unlockedGenerals: string[];
   unlockedCards: string[];
+  deck: string[]; // card ids in current deck (with duplicates for copies)
   globalBonuses: Record<string, number>; // id -> tier
   tutorialDone: boolean;
 }
@@ -22,6 +23,7 @@ const DEFAULT_META: MetaState = {
   totalPointsEarned: 0,
   unlockedGenerals: ["shoucheng"],
   unlockedCards: ["steady", "guard", "heavyArmor", "firstAid", "summonFootman", "spear"],
+  deck: [],
   globalBonuses: {},
   tutorialDone: false,
 };
