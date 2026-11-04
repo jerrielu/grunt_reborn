@@ -32,7 +32,7 @@ export function openDeckBuilder(controller: GameController): void {
 
   const overlay = document.createElement("div");
   overlay.className = "deckbuilder";
-  overlay.style.cssText = "position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;background:#1a1408;font-family:monospace;color:#e8d9a8;overflow:hidden;";
+  overlay.style.cssText = "position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;background:#1a1408;font-family:monospace;color:#e8d9a8;overflow:hidden;min-height:100vh;min-height:100dvh;";
 
   // wood texture
   const tex = document.createElement("div");
