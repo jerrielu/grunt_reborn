@@ -42,10 +42,10 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     overlay.style.cssText = "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:12;";
     const card = document.createElement("div");
     card.style.cssText = "display:flex;flex-direction:column;align-items:center;";
-    const canvas = renderCardCanvas(defId);
+    const canvas = renderCardCanvas(defId, 2);
     const img = document.createElement("img");
     img.src = canvas.toDataURL("image/png");
-    img.style.cssText = "width:192px;height:288px;image-rendering:pixelated;border:2px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.8);";
+    img.style.cssText = "width:256px;height:384px;image-rendering:pixelated;border:2px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.8);";
     card.appendChild(img);
     const label = document.createElement("div");
     label.style.cssText = "margin-top:6px;font-size:12px;color:#fff;text-align:center;";
@@ -67,10 +67,10 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     const rootRect = root.getBoundingClientRect();
     const float = document.createElement("div");
     float.style.cssText = "position:absolute;z-index:20;pointer-events:none;display:flex;flex-direction:column;align-items:center;";
-    const canvas = renderCardCanvas(cardId);
+    const canvas = renderCardCanvas(cardId, 2);
     const img = document.createElement("img");
     img.src = canvas.toDataURL("image/png");
-    img.style.cssText = "width:192px;height:288px;image-rendering:pixelated;border:2px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.8);";
+    img.style.cssText = "width:256px;height:384px;image-rendering:pixelated;border:2px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.8);";
     float.appendChild(img);
     const label = document.createElement("div");
     label.style.cssText = "margin-top:6px;font-size:12px;color:#fff;text-align:center;max-width:220px;";
@@ -80,14 +80,14 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     const startTop = srcRect.top - rootRect.top;
     float.style.left = startLeft + "px";
     float.style.top = startTop + "px";
-    float.style.transform = "scale(0.32)";
+    float.style.transform = "scale(0.24)";
     float.style.transformOrigin = "top left";
     root.appendChild(float);
 
-    const targetLeft = (root.clientWidth - 192) / 2;
-    const targetTop = (root.clientHeight - 288) / 2;
+    const targetLeft = (root.clientWidth - 256) / 2;
+    const targetTop = (root.clientHeight - 384) / 2;
     const moveAnim = float.animate([
-      { left: startLeft + "px", top: startTop + "px", transform: "scale(0.32)" },
+      { left: startLeft + "px", top: startTop + "px", transform: "scale(0.24)" },
       { left: targetLeft + "px", top: targetTop + "px", transform: "scale(1)" },
     ], { duration: 280, easing: "cubic-bezier(0.2,0.8,0.2,1)", fill: "forwards" });
     let done = false;

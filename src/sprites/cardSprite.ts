@@ -82,41 +82,54 @@ export class CardSpriteTemplate extends SpriteTemplate {
   }
 }
 
-export function renderCardCanvas(cardId: string): HTMLCanvasElement {
+export function renderCardCanvas(cardId: string, scale: number = 1): HTMLCanvasElement {
+  const s = Math.max(1, Math.round(scale));
+  const baseW = 64;
+  const baseH = 96;
+  const w = baseW * s;
+  const h = baseH * s;
   const tpl = new CardSpriteTemplate(cardId);
-  const canvas = tpl.renderToCanvas();
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
   const ctx = canvas.getContext("2d")!;
+  ctx.imageSmoothingEnabled = false;
+  ctx.clearRect(0, 0, w, h);
+  for (const [key, color] of tpl.pixels()) {
+    const [x, y] = key.split(",").map(Number);
+    ctx.fillStyle = `rgba(${color[0]},${color[1]},${color[2]},${color[3] / 255})`;
+    ctx.fillRect(x * s, y * s, s, s);
+  }
   const def = getCard(cardId);
   if (!def) return canvas;
   if (def.type === "summon") {
     const stpl = new MenSpriteTemplate();
     const sc = stpl.renderToCanvas();
-    ctx.drawImage(sc, 6, 16, 52, 34);
+    ctx.drawImage(sc, 6 * s, 16 * s, 52 * s, 34 * s);
   }
   ctx.fillStyle = "#1a1a1a";
-  ctx.font = "bold 9px monospace";
-  ctx.fillText(def.name, 6, 13);
-  ctx.font = "7px monospace";
+  ctx.font = `bold ${9 * s}px monospace`;
+  ctx.fillText(def.name, 6 * s, 13 * s);
+  ctx.font = `${7 * s}px monospace`;
   ctx.fillStyle = "#333";
-  // wrap description into effect area
   const words = def.description.split("");
   let line = "";
-  let y = 68;
-  const maxW = 52;
+  let y = 68 * s;
+  const maxW = 52 * s;
   for (const ch of words) {
     const test = line + ch;
     if (ctx.measureText(test).width > maxW && line) {
-      ctx.fillText(line, 6, y);
+      ctx.fillText(line, 6 * s, y);
       line = ch;
-      y += 9;
-      if (y > 84) break;
+      y += 9 * s;
+      if (y > 84 * s) break;
     } else {
       line = test;
     }
   }
-  if (line && y <= 84) ctx.fillText(line, 6, y);
-  ctx.font = "7px monospace";
+  if (line && y <= 84 * s) ctx.fillText(line, 6 * s, y);
+  ctx.font = `${7 * s}px monospace`;
   ctx.fillStyle = "#555";
-  ctx.fillText(def.type.toUpperCase(), 6, 58);
+  ctx.fillText(def.type.toUpperCase(), 6 * s, 58 * s);
   return canvas;
 }
