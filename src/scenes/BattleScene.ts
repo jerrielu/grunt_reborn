@@ -17,7 +17,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   create(): void {
-    const w = 180, h = 351;
+    const w = 180, h = 288;
     // reusable ground texture
     const key = TileFactory.ensureGroundTexture(this, w, h);
     const ground = this.add.image(0, 0, key).setOrigin(0, 0);
@@ -26,7 +26,7 @@ export class BattleScene extends Phaser.Scene {
     border.strokeRect(2, 2, w - 4, h - 4);
     // camera
     this.cameras.main.setBounds(0, 0, w, h);
-    this.cameras.main.setZoom(0.85);
+    this.cameras.main.setZoom(1);
     // listen to sim events for damage numbers
     this.sim.events.on("unit.died", (e) => {
       const u = this.findUnit(e.data.id as number);

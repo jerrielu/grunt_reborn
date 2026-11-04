@@ -11,7 +11,7 @@ const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: "game",
   width: 180,
-  height: 390,
+  height: 320,
   backgroundColor: "#1a1a2e",
   antialias: false,
   pixelArt: true,
