@@ -10,7 +10,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
 
   const panel = document.createElement("div");
   panel.id = "hand-panel";
-  panel.style.cssText = "position:absolute;left:0;right:0;bottom:0;height:10%;background:linear-gradient(180deg,#5a3a1a 0%,#3a2410 100%);color:#fff;font-family:monospace;z-index:9;display:flex;align-items:center;justify-content:space-between;padding:4px 8px;box-sizing:border-box;border-top:2px solid #2a1a08;overflow:visible;";
+  panel.style.cssText = "position:absolute;left:0;right:0;bottom:0;height:10%;background:linear-gradient(180deg,#5a3a1a 0%,#3a2410 100%);color:#fff;font-family:monospace;z-index:9;display:flex;align-items:center;justify-content:space-between;padding:6px 10px;box-sizing:border-box;border-top:2px solid #2a1a08;overflow:visible;";
   root.appendChild(panel);
 
   // desk texture lines
@@ -19,11 +19,11 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
   panel.appendChild(desk);
 
   const handArea = document.createElement("div");
-  handArea.style.cssText = "position:relative;flex:0 0 80%;display:flex;align-items:flex-end;justify-content:flex-start;height:100%;overflow:visible;";
+  handArea.style.cssText = "position:relative;flex:0 0 80%;display:flex;align-items:flex-end;justify-content:flex-start;height:100%;overflow:visible;padding:0 6px 4px 6px;box-sizing:border-box;";
   panel.appendChild(handArea);
 
   const deckArea = document.createElement("div");
-  deckArea.style.cssText = "position:relative;flex:0 0 20%;height:100%;display:flex;align-items:flex-end;justify-content:center;";
+  deckArea.style.cssText = "position:relative;flex:0 0 20%;height:100%;display:flex;align-items:flex-end;justify-content:center;padding:4px 6px;box-sizing:border-box;";
   panel.appendChild(deckArea);
 
   let preview: HTMLElement | null = null;
@@ -184,7 +184,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     const rootRect = root.getBoundingClientRect();
     const handRect = handArea.getBoundingClientRect();
     const n = sim.state.deck.length;
-    const avail = handArea.clientWidth || Math.round(root.clientWidth * 0.8) || 314;
+    const avail = (handArea.clientWidth || Math.round(root.clientWidth * 0.8) || 314) - 12;
     const cardW = 70; const cardH = 98; const maxSpacing = 29;
     const spread = n > 8 ? 4 : n > 5 ? 6 : 10;
     const maxAngle = ((n - 1) / 2) * spread * (Math.PI / 180);
@@ -194,7 +194,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     const startLeft = deckRect.left - rootRect.left + deckRect.width / 2 - 31;
     const startTop = deckRect.top - rootRect.top + deckRect.height / 2 - 47;
     const endLeft = handRect.left - rootRect.left + handRect.width / 2 + offset - 31;
-    const endTop = handRect.bottom - rootRect.top - 94;
+    const endTop = handRect.bottom - rootRect.top - 98;
 
     const float = document.createElement("div");
     float.style.cssText = "position:absolute;z-index:22;pointer-events:none;display:flex;flex-direction:column;align-items:center;";
@@ -232,7 +232,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
     // fan layout
 const cards = s.deck;
     const n = cards.length;
-    const avail = handArea.clientWidth || Math.round(root.clientWidth * 0.8) || 314;
+    const avail = (handArea.clientWidth || Math.round(root.clientWidth * 0.8) || 314) - 12;
     const cardW = 70;
     const cardH = 98;
     const maxSpacing = 29;
@@ -244,7 +244,7 @@ const cards = s.deck;
       const el = makeCard(inst.defId);
       el.style.position = "absolute";
       el.style.left = `calc(50% + ${(i - (n - 1) / 2) * spacing}px)`;
-      el.style.bottom = "0";
+      el.style.bottom = "4px";
       const angle = (i - (n - 1) / 2) * spread;
       el.style.transform = `translateX(-50%) rotate(${angle}deg)`;
       el.style.transformOrigin = "bottom center";
@@ -255,7 +255,7 @@ const cards = s.deck;
     deckArea.innerHTML = "";
     // deck stack visual
     const stack = document.createElement("div");
-    stack.style.cssText = "position:relative;width:62px;height:94px;";
+    stack.style.cssText = "position:relative;width:62px;height:94px;margin-bottom:4px;";
     for (let i = 0; i < 3; i++) {
       const c = document.createElement("div");
       c.style.cssText = `position:absolute;left:${i * 2}px;top:${i * 2}px;width:62px;height:94px;background:#222;border:1px solid #555;image-rendering:pixelated;`;
