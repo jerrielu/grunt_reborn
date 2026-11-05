@@ -4,8 +4,14 @@ import { CARDS } from "../config/cards";
 import { UNLOCKS } from "../config/unlocks";
 import { openDeckBuilder } from "./deckBuilder";
 import { gameRoot, mountScreen } from "./screen";
+import { renderCardCanvas } from "../sprites/cardSprite";
 
 declare const __APP_VERSION__: string;
+
+const GACHA_POOL = ["omnislash","charge","guard","assassinate","frenzy","bait","slowHit","lurk","steady","bloodbath","spear","heavyArmor","swiftBoots","dagger","shockwave","firstAid","disrupt","roar","summonFootman","summonSpearman","summonShieldman","summonRally"];
+const GACHA_NAMES: Record<string,string> = {
+  omnislash:"无敌斩",charge:"冲锋",guard:"防御",assassinate:"刺杀",frenzy:"狂暴",bait:"诱饵",slowHit:"重击",lurk:"潜伏",steady:"稳守",bloodbath:"血浴",spear:"长矛",heavyArmor:"重甲",swiftBoots:"疾靴",dagger:"匕首",shockwave:"冲击波",firstAid:"急救",disrupt:"扰乱",roar:"咆哮",summonFootman:"召唤步兵",summonSpearman:"召唤枪兵",summonShieldman:"召唤盾兵",summonRally:"集结",
+};
 
 export function showMenu(controller: GameController, onStart: (generalId: string) => void): void {
   gameRoot().querySelectorAll(".overlay").forEach((e) => e.remove());
@@ -28,7 +34,7 @@ export function showMenu(controller: GameController, onStart: (generalId: string
     { id: "summoner", label: "招魂将（召唤）" },
   ];
 
-  let screen: "main" | "generals" | "cards" = "main";
+  let screen: "main" | "generals" | "cards" | "gacha" = "main";
   let hovered = -1;
   let hoveredBack = false;
 
@@ -37,12 +43,20 @@ export function showMenu(controller: GameController, onStart: (generalId: string
   const btnX = Math.round((W - btnW) / 2);
 
   const mainRects = [
-    { id: "start", label: "开始游戏", x: btnX, y: 260, w: btnW, h: btnH },
-    { id: "cards", label: "卡牌构筑", x: btnX, y: 312, w: btnW, h: btnH },
+    { id: "start", label: "开始游戏", x: btnX, y: 240, w: btnW, h: btnH },
+    { id: "gacha", label: "抽卡", x: btnX, y: 292, w: btnW, h: btnH },
+    { id: "cards", label: "卡牌构筑", x: btnX, y: 344, w: btnW, h: btnH },
   ];
 
   let generalRects: { id: string; x: number; y: number; w: number; h: number }[] = [];
   const cardRects: { id: string; x: number; y: number; w: number; h: number }[] = [];
+  const gachaRects: { id: string; x: number; y: number; w: number; h: number }[] = [
+    { id: "draw1", x: Math.round((W - 240) / 2), y: 200, w: 110, h: 32 },
+    { id: "draw10", x: Math.round((W - 240) / 2) + 130, y: 200, w: 110, h: 32 },
+  ];
+  let gachaResults: string[] = [];
+  let gachaAnimating = false;
+  let gachaAnimStart = 0;
 
   const backRect = { x: Math.round((W - 120) / 2), y: H - 60, w: 120, h: 28 };
 
@@ -74,6 +88,7 @@ export function showMenu(controller: GameController, onStart: (generalId: string
   function currentRects(): { id: string; x: number; y: number; w: number; h: number }[] {
     if (screen === "main") return mainRects;
     if (screen === "generals") return generalRects;
+    if (screen === "gacha") return gachaRects;
     return cardRects;
   }
 
@@ -97,6 +112,7 @@ export function showMenu(controller: GameController, onStart: (generalId: string
     octx.font = "bold 44px monospace";
     if (screen === "main") octx.fillText("小兵重来", W / 2, 104);
     else if (screen === "generals") octx.fillText("选择武将", W / 2, 104);
+    else if (screen === "gacha") octx.fillText("抽卡", W / 2, 104);
     else octx.fillText("卡牌构筑", W / 2, 104);
 
     if (screen === "main") {
@@ -107,6 +123,11 @@ export function showMenu(controller: GameController, onStart: (generalId: string
       octx.fillStyle = "#c9a86a";
       octx.font = "20px monospace";
       octx.fillText("选择武将开始闯关", W / 2, 160);
+    } else if (screen === "gacha") {
+      octx.fillStyle = "#c9a86a";
+      octx.font = "16px monospace";
+      octx.fillText("轮回积分: " + controller.meta.state.points, W / 2, 134);
+      octx.fillText("点击按钮抽卡", W / 2, 160);
     } else {
       octx.fillStyle = "#c9a86a";
       octx.font = "16px monospace";
@@ -144,7 +165,12 @@ export function showMenu(controller: GameController, onStart: (generalId: string
         octx.fillText(g.label, r.x + r.w / 2, r.y + r.h / 2);
       } else if (screen === "main") {
         octx.font = "bold 13px monospace";
-        octx.fillText(r.id === "start" ? "开始游戏" : "卡牌构筑", r.x + r.w / 2, r.y + r.h / 2);
+        const mainLabels: Record<string,string> = { start: "开始游戏", gacha: "抽卡", cards: "卡牌构筑" };
+        octx.fillText(mainLabels[r.id] ?? r.id, r.x + r.w / 2, r.y + r.h / 2);
+      } else if (screen === "gacha") {
+        octx.font = "bold 12px monospace";
+        const gLabels: Record<string,string> = { draw1: "抽一次", draw10: "抽十次" };
+        octx.fillText(gLabels[r.id] ?? r.id, r.x + r.w / 2, r.y + r.h / 2);
       } else {
         const c = CARDS[i];
         const unlocked = controller.meta.state.unlockedCards.includes(c.id);
@@ -197,6 +223,57 @@ export function showMenu(controller: GameController, onStart: (generalId: string
     octx.putImageData(img, 0, 0);
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(off, 0, 0);
+
+    if (screen === "gacha" && gachaResults.length > 0) {
+      const t = gachaAnimating ? (performance.now() - gachaAnimStart) : 999999;
+      const n = gachaResults.length;
+      const cols = n === 1 ? 1 : 5;
+      const rows = n === 1 ? 1 : 2;
+      const cardW = n === 1 ? 192 : 60;
+      const cardH = n === 1 ? 288 : 90;
+      const gapX = n === 1 ? 0 : 10;
+      const gapY = n === 1 ? 0 : 14;
+      const totalW = cols * cardW + (cols - 1) * gapX;
+      const totalH = rows * cardH + (rows - 1) * gapY;
+      const startX = Math.round((W - totalW) / 2);
+      const startY = 250;
+      const stagger = n === 1 ? 0 : 120;
+      const dur = 420;
+      gachaResults.forEach((id, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        const x = startX + col * (cardW + gapX);
+        const y = startY + row * (cardH + gapY);
+        const delay = i * stagger;
+        const prog = Math.min(1, Math.max(0, (t - delay) / dur));
+        const ease = 1 - Math.pow(1 - prog, 3);
+        const scale = 0.15 + 0.85 * ease;
+        const alpha = Math.min(1, prog * 1.5);
+        if (prog > 0) {
+          ctx.save();
+          ctx.globalAlpha = 0.45 * alpha;
+          ctx.fillStyle = "#ffd700";
+          ctx.fillRect(x - 5, y - 5, cardW + 10, cardH + 10);
+          ctx.restore();
+        }
+        const cardCanvas = renderCardCanvas(id, 1);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        const cx = x + cardW / 2;
+        const cy = y + cardH / 2;
+        ctx.translate(cx, cy);
+        ctx.scale(scale, scale);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(cardCanvas, -cardW / 2, -cardH / 2, cardW, cardH);
+        ctx.restore();
+        if (prog >= 0.75) {
+          ctx.fillStyle = "#e8d9a8";
+          ctx.font = "bold 9px monospace";
+          ctx.textAlign = "center";
+          ctx.fillText(GACHA_NAMES[id] ?? id, cx, y + cardH + 12);
+        }
+      });
+    }
   }
 
   draw();
@@ -248,10 +325,28 @@ export function showMenu(controller: GameController, onStart: (generalId: string
     }
   });
 
+  function startGachaDraw(count: number) {
+    gachaResults = [];
+    for (let i = 0; i < count; i++) gachaResults.push(GACHA_POOL[Math.floor(Math.random() * GACHA_POOL.length)]);
+    gachaAnimStart = performance.now();
+    gachaAnimating = true;
+    const total = count === 1 ? 500 : 10 * 110 + 500;
+    const loop = () => {
+      if (!gachaAnimating) return;
+      draw();
+      if (performance.now() - gachaAnimStart < total) requestAnimationFrame(loop);
+      else { gachaAnimating = false; draw(); }
+    };
+    requestAnimationFrame(loop);
+  }
+
   function handleSelect(i: number) {
     if (screen === "main") {
-      if (i === 0) { screen = "generals"; hovered = -1; refresh(); }
-      else if (i === 1) { openDeckBuilder(controller); }
+      const r = mainRects[i];
+      if (!r) return;
+      if (r.id === "start") { screen = "generals"; hovered = -1; refresh(); }
+      else if (r.id === "gacha") { screen = "gacha"; gachaResults = []; gachaAnimating = false; hovered = -1; refresh(); }
+      else if (r.id === "cards") { openDeckBuilder(controller); }
     } else if (screen === "generals") {
       const gens = allGenerals.filter((gg) => controller.meta.state.unlockedGenerals.includes(gg.id));
       const g = gens[i];
@@ -259,6 +354,12 @@ export function showMenu(controller: GameController, onStart: (generalId: string
         overlay.remove();
         onStart(g.id);
       }
+    } else if (screen === "gacha") {
+      if (gachaAnimating) return;
+      const r = gachaRects[i];
+      if (!r) return;
+      if (r.id === "draw1") startGachaDraw(1);
+      else if (r.id === "draw10") startGachaDraw(10);
     } else if (screen === "cards") {
       const c = CARDS[i];
       if (!c) return;
