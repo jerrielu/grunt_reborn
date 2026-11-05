@@ -24,6 +24,11 @@ This game is designed for mobile phone in portrait mode.
 - design.md provides the high-level design of the game.
 - changes.md records changes for every version. Changes must be concise and meaningful, and should contain feature changes that players should know.
 
+## Code Review
+
+- After implementation, review the code and make sure there is no dead code (unused imports, functions, config, or UI paths).
+- Ensure newly added code is necessary. In many scenarios, refactor the existing code to support a new feature instead of adding parallel or duplicate code.
+
 ## Versioning
 
 - Do not update the version number for every commit. Instead, at the end of the job completion, update the version number in the final commit.
