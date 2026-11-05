@@ -2,6 +2,8 @@ import { GameController } from "../game";
 import { createRunState, BattleSim } from "../core/battle/BattleSim";
 import { getCard } from "../config/cards";
 import { mountScreen } from "./screen";
+import type { GameEvent } from "../core/types";
+import { formatSimEvents } from "../core/simLog";
 
 function botPlay(sim: BattleSim): void {
   const s = sim.state;
@@ -95,8 +97,8 @@ export function openSettings(controller: GameController): void {
     const seed = Math.floor(Math.random() * 1e9);
     const state = createRunState(seed, "shoucheng");
     const sim = new BattleSim(state);
-    const transcript: string[] = [];
-    sim.events.onAll((e) => transcript.push(`[${e.type}] t=${e.t.toFixed(2)} ${JSON.stringify(e.data)}`));
+    const events: GameEvent[] = [];
+    sim.events.onAll((e) => events.push(e));
 
     let rounds = 0;
     let levelsDone = 0;
@@ -120,7 +122,7 @@ export function openSettings(controller: GameController): void {
       }
       break;
     }
-    transcript.forEach((l) => appendLine(l));
-    appendLine(`\n模拟结束: 关卡=${state.levelsCleared ?? 0} 回合=${rounds}`);
+    formatSimEvents(events).forEach((l) => appendLine(l));
+    appendLine(`\n模拟结束：关卡=${state.levelsCleared ?? 0} 回合=${rounds}`);
   }
 }
