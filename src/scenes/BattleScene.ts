@@ -160,7 +160,7 @@ export class BattleScene extends Phaser.Scene {
       let c = this.unitSprites.get(u.id);
       if (!c) {
         c = this.add.container(u.x, u.y);
-        const texKey = (u.side === "hero" && this.sim.state.generalId === "vanguard") ? "vanguard" : "hero";
+        const texKey = u.side === "enemy" ? "soldier" : (u.side === "hero" && this.sim.state.generalId === "vanguard" ? "vanguard" : "hero");
         const sprite = this.add.image(0, 0, texKey);
          sprite.setScale(0.448);
         if (u.side === "enemy") sprite.setTint(0xaa4444);

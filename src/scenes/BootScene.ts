@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { MenSpriteTemplate } from "../sprites/men";
+import { SuitSpriteTemplate } from "../sprites/suit";
 import { VanguardSpriteTemplate } from "../sprites/vanguard";
 import { Sword } from "../sprites/components/sword";
 
@@ -7,12 +8,19 @@ export class BootScene extends Phaser.Scene {
   constructor() { super({ key: "BootScene" }); }
 
   create(): void {
-    const tpl = new MenSpriteTemplate();
+    const tpl = new SuitSpriteTemplate();
     const canvas = tpl.renderToCanvas();
     const tex = this.textures.createCanvas("hero", 64, 64);
     if (tex) {
       tex.getContext().drawImage(canvas, 0, 0);
       tex.refresh();
+    }
+    const stpl = new MenSpriteTemplate();
+    const soldierCanvas = stpl.renderToCanvas();
+    const soldierTex = this.textures.createCanvas("soldier", 64, 64);
+    if (soldierTex) {
+      soldierTex.getContext().drawImage(soldierCanvas, 0, 0);
+      soldierTex.refresh();
     }
     const vtpl = new VanguardSpriteTemplate();
     const vcanvas = vtpl.renderToCanvas();
