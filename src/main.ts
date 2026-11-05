@@ -5,6 +5,7 @@ import { GameController } from "./game";
 import { showMenu } from "./ui/menu";
 import { initPWA, setUpdateHandler } from "./pwa";
 import { runLoadingScreen } from "./ui/loading";
+import { runSplashScreen } from "./ui/splash";
 import { attachHandPanel } from "./ui/handPanel";
 
 const controller = new GameController();
@@ -49,6 +50,7 @@ function startRun(generalId: string): void {
 }
 
 async function boot(): Promise<void> {
+  await runSplashScreen();
   await runLoadingScreen();
   showMenu(controller, startRun);
   initPWA();
