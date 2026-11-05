@@ -35,11 +35,6 @@ export function showMenu(controller: GameController, onStart: (generalId: string
   ];
 
   let screen: "main" | "generals" | "cards" | "gacha" = "main";
-  let updatePending = false;
-  function showUpdatePrompt() {
-    const ok = window.confirm("发现新版本，是否更新？");
-    if (ok) applyUpdate();
-  }
   let hovered = -1;
   let hoveredBack = false;
 
@@ -387,10 +382,6 @@ export function showMenu(controller: GameController, onStart: (generalId: string
         hovered = -1;
         hoveredBack = false;
         refresh();
-        if (updatePending) {
-          updatePending = false;
-          showUpdatePrompt();
-        }
       }
       return;
     }
@@ -407,10 +398,6 @@ export function showMenu(controller: GameController, onStart: (generalId: string
         hovered = -1;
         hoveredBack = false;
         refresh();
-        if (updatePending) {
-          updatePending = false;
-          showUpdatePrompt();
-        }
       }
       return;
     }
@@ -419,12 +406,7 @@ export function showMenu(controller: GameController, onStart: (generalId: string
   });
 
   setUpdateHandler(() => {
-    if (screen === "main") showUpdatePrompt();
-    else updatePending = true;
+    applyUpdate();
   });
-  if (updatePending && screen === "main") {
-    updatePending = false;
-    showUpdatePrompt();
-  }
   overlay.appendChild(canvas);
 }
