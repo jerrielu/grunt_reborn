@@ -7,6 +7,8 @@ import { formatSimEvents } from "../core/simLog";
 
 function botPlay(sim: BattleSim): void {
   const s = sim.state;
+  // simulate a draw before deciding, like the real player
+  sim.drawCard();
   const heroHpRatio = s.hero.hp / s.hero.maxHp;
   if (heroHpRatio < 0.4 && s.deck.some((c) => c.defId === "firstAid")) {
     const inst = s.deck.find((c) => c.defId === "firstAid")!;
@@ -28,6 +30,14 @@ function botPlay(sim: BattleSim): void {
     const summonInst = s.deck.find((c) => getCard(c.defId)?.type === "summon");
     if (summonInst) {
       sim.playCard(summonInst.defId);
+      sim.endDecide();
+      return;
+    }
+  }
+  if (s.equipment.weapon !== "omnislash") {
+    const equipInst = s.deck.find((c) => getCard(c.defId)?.type === "equipment");
+    if (equipInst) {
+      sim.playCard(equipInst.defId);
       sim.endDecide();
       return;
     }

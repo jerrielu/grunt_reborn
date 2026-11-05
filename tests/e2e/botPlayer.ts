@@ -3,6 +3,8 @@ import { getCard } from "../../src/config/cards";
 
 export function botPlay(sim: BattleSim): void {
   const s = sim.state;
+  // simulate a draw before deciding, like the real player
+  sim.drawCard();
   const heroHpRatio = s.hero.hp / s.hero.maxHp;
   // 1. emergency heal
   if (heroHpRatio < 0.4 && s.deck.some((c) => c.defId === "firstAid")) {
@@ -31,6 +33,15 @@ export function botPlay(sim: BattleSim): void {
       return;
     }
   }
-  // 4. skip
+  // 4. equip omnislash if not equipped
+  if (s.equipment.weapon !== "omnislash") {
+    const equipInst = s.deck.find((c) => getCard(c.defId)?.type === "equipment");
+    if (equipInst) {
+      sim.playCard(equipInst.defId);
+      sim.endDecide();
+      return;
+    }
+  }
+  // 5. skip
   sim.skipCard();
 }

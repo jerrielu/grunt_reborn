@@ -164,7 +164,12 @@ export class BattleSim {
       this.levelClear();
     }
 
-    // manual card draw: no automatic draw
+    // decide window when fight time expires
+    if (s.phase === "fight" && s.roundTime >= s.fightSeconds) {
+      s.phase = "decide";
+      s.timer = 0;
+      this.emit("phase.changed", { phase: "decide" });
+    }
   }
 
   private allUnits(): Unit[] {
