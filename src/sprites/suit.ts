@@ -18,9 +18,16 @@ export class SuitSpriteTemplate extends SpriteTemplate {
       const face = (head as any).children?.[2];
       if (face) face.visible = false;
     }
+    const bodyRot = dir === "right" ? 90 : dir === "left" ? 270 : 0;
+    const suitBody = new SuitBody([32, 30]);
+    for (const ch of (suitBody as any).children || []) (ch as any).rotation = bodyRot;
+    if (back) {
+      const kids = (suitBody as any).children || [];
+      for (let i = 1; i < kids.length; i++) kids[i].visible = false;
+    }
     const comps: any[] = [
       head,
-      new SuitBody([32, 30]),
+      suitBody,
       new Arm([22, 28], [25, 35, 80, 255]),
       new Arm([42, 28], [25, 35, 80, 255]),
       new Leg([28, 38], "left", [30, 30, 40, 255], [20, 20, 20, 255]),

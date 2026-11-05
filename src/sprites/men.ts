@@ -18,9 +18,12 @@ export class MenSpriteTemplate extends SpriteTemplate {
       const face = (head as any).children?.[2];
       if (face) face.visible = false;
     }
+    const bodyRot = dir === "right" ? 90 : dir === "left" ? 270 : 0;
+    const body = new Body([32, 30]);
+    body.rotation = bodyRot;
     const comps: any[] = [
       head,
-      new Body([32, 30]),
+      body,
       new Arm([22, 28]),
       new Arm([42, 28]),
       new Leg([28, 38], "left"),
