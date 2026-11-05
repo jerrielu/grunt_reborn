@@ -7,6 +7,14 @@ export function initPWA(): void {
   window.addEventListener("load", async () => {
     try {
       registration = await navigator.serviceWorker.register("/sw.js");
+      // Pick up an update that is already waiting (safety net).
+      if (registration.waiting && navigator.serviceWorker.controller) {
+        if (updateCallback) {
+          updateCallback();
+        } else {
+          updateAvailable = true;
+        }
+      }
       registration.addEventListener("updatefound", () => {
         const worker = registration?.installing;
         if (!worker) return;

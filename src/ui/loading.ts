@@ -39,13 +39,20 @@ export async function runLoadingScreen(): Promise<void> {
       status.textContent = "检查更新...";
       const reg = await navigator.serviceWorker.register("/sw.js");
       await reg.update().catch(() => undefined);
+      const waitForControllerChange = () =>
+        new Promise<void>((resolve) => {
+          const timer = setTimeout(resolve, 4000);
+          navigator.serviceWorker.addEventListener(
+            "controllerchange",
+            () => { clearTimeout(timer); resolve(); },
+            { once: true }
+          );
+        });
       if (reg.waiting) {
         status.textContent = "更新到最新版本...";
         setProgress(5, "更新到最新版本...");
         reg.waiting.postMessage("SKIP_WAITING");
-        await new Promise<void>((resolve) => {
-          navigator.serviceWorker.addEventListener("controllerchange", () => resolve(), { once: true });
-        });
+        await waitForControllerChange();
         location.reload();
         await new Promise(() => {});
       }
