@@ -15,6 +15,7 @@ This game is designed for mobile phone in portrait mode.
 - No test is required for any visual element such as rendering etc.
 - Code without any logic (pure data, config, markup, trivial passthrough) does not require tests.
 - Always include both end-to-end (E2E) gameplay tests for verifying the game works correctly. Each E2E test must log every behavior and every game state data change. Do not perform E2E test through browser or in a visual way.
+- Every change (feature, fix, or refactor) must be covered by E2E gameplay tests that exercise the affected behavior and assert on the resulting game state; do not merge a change without corresponding E2E coverage.
 
 ## Documentation
 
