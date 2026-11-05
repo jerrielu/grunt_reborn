@@ -14,7 +14,7 @@ function clamp(v: number, lo: number, hi: number): number {
 
 function makeHero(id: number, generalId: string): HeroUnit {
   const base: HeroUnit = {
-    id, side: "hero", name: "主角", x: ARENA.w / 2, y: ARENA.h / 2, hp: 120, maxHp: 120,
+     id, side: "hero", name: "主角", x: ARENA.w / 2, y: ARENA.h - 40, hp: 120, maxHp: 120,
     speed: 90, attackDamage: 12, attackRange: 46, attackInterval: 0.7, attackCooldown: 0,
     radius: 14, alive: true, targetId: null, facing: 0,
     damageTakenMul: 1, damageDealtMul: 1, speedMul: 1, attackIntervalMul: 1,
@@ -138,6 +138,13 @@ export class BattleSim {
     // knockback decay + apply
     for (const u of this.allUnits()) {
       if (!u.alive) continue;
+      if (u.side === "hero") {
+        u.x = ARENA.w / 2;
+        u.y = ARENA.h - 40;
+        u.knockVx = 0;
+        u.knockVy = 0;
+        continue;
+      }
       u.x += u.knockVx * dt;
       u.y += u.knockVy * dt;
       u.knockVx *= Math.pow(0.1, dt);
@@ -170,12 +177,8 @@ export class BattleSim {
     const id = s.nextUnitId++;
     const hpMul = (s as any)._hpMul ?? 1;
     const atkMul = (s as any)._atkMul ?? 1;
-    const edge = this.rng.int(0, 3);
-    let x = 0, y = 0;
-    if (edge === 0) { x = this.rng.int(WALL, ARENA.w - WALL); y = WALL + 20; }
-    else if (edge === 1) { x = ARENA.w - WALL - 20; y = this.rng.int(WALL, ARENA.h - WALL); }
-    else if (edge === 2) { x = this.rng.int(WALL, ARENA.w - WALL); y = ARENA.h - WALL - 20; }
-    else { x = WALL + 20; y = this.rng.int(WALL, ARENA.h - WALL); }
+    let x = this.rng.int(WALL, ARENA.w - WALL);
+    const y = WALL + 20;
 
     if (kind === "grunt") {
       const e: EnemyUnit = {
@@ -218,10 +221,10 @@ export class BattleSim {
     const tactics = s.buffs.filter(b => b.kind === "tactic" && b.roundsRemaining > 0);
     const activeBehavior = tactics.length ? tactics[tactics.length - 1].behavior : null;
 
-    // low hp retreat flag
-    const lowHp = h.hp / h.maxHp < h.lowHpThreshold;
-    let retreating = lowHp && activeBehavior !== "charge" && activeBehavior !== "guard";
-    h.retreating = retreating;
+    // hero does not move; reset position to bottom center
+    h.x = ARENA.w / 2;
+    h.y = ARENA.h - 40;
+    h.retreating = false;
 
     // target selection
     let target: Unit | null = null;
@@ -235,34 +238,6 @@ export class BattleSim {
       target = elites.length ? findNearest(h, elites) : findNearest(h, enemies);
     } else {
       target = findNearest(h, enemies);
-    }
-
-    // movement
-    const speed = h.speed * h.speedMul * (activeBehavior === "charge" ? 1.3 : 1);
-    if (target && activeBehavior !== "guard") {
-      const d = distance(h, target);
-      if (d > h.attackRange * 0.9) {
-        if (retreating && d > h.attackRange * 1.5) {
-          // retreat: move away from target slightly
-          const dx = h.x - target.x; const dy = h.y - target.y; const len = Math.hypot(dx, dy) || 1;
-          h.x += (dx / len) * speed * 0.4 * dt;
-          h.y += (dy / len) * speed * 0.4 * dt;
-        } else {
-          const dx = target.x - h.x; const dy = target.y - h.y; const len = Math.hypot(dx, dy) || 1;
-          h.x += (dx / len) * speed * dt;
-          h.y += (dy / len) * speed * dt;
-        }
-      }
-    }
-    // charge: bias toward densest cluster
-    if (activeBehavior === "charge" && enemies.length > 0) {
-      const cx = enemies.reduce((a, e) => a + e.x, 0) / enemies.length;
-      const cy = enemies.reduce((a, e) => a + e.y, 0) / enemies.length;
-      const dx = cx - h.x; const dy = cy - h.y; const len = Math.hypot(dx, dy) || 1;
-      if (len > h.attackRange) {
-        h.x += (dx / len) * speed * dt;
-        h.y += (dy / len) * speed * dt;
-      }
     }
 
     if (target) h.facing = Math.atan2(target.y - h.y, target.x - h.x);
@@ -390,11 +365,16 @@ export class BattleSim {
         if (d < minD && d > 0) {
           const push = (minD - d) * 0.3;
           const dx = (b.x - a.x) / d; const dy = (b.y - a.y) / d;
-          a.x -= dx * push; a.y -= dy * push;
-          b.x += dx * push; b.y += dy * push;
+          if (a.side !== "hero") { a.x -= dx * push; a.y -= dy * push; }
+          if (b.side !== "hero") { b.x += dx * push; b.y += dy * push; }
         }
       }
     }
+    // keep hero fixed
+    const s = this.state;
+    const hero = s.hero;
+    hero.x = ARENA.w / 2;
+    hero.y = ARENA.h - 40;
   }
 
   private handleDeaths(): void {
