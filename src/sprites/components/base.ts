@@ -9,7 +9,9 @@ export class Component {
   rects: [number, number, number, number][] | null = null;
   clip: [number, number, number, number] | null = null;
   visible = true;
-  mirrored = false;
+  private _mirrored = false;
+  get mirrored(): boolean { return this._mirrored; }
+  set mirrored(v: boolean) { this._mirrored = v; }
 
   localOffsets(): Point[] {
     if (this.rects) {
@@ -28,7 +30,8 @@ export class Component {
 
   pixels(): Map<string, Color> {
     if (!this.visible) return new Map();
-    const [px, py] = this.position;
+    const [px0, py] = this.position;
+    const px = this.mirrored ? 63 - px0 : px0;
     const angle = (this.rotation * Math.PI) / 180;
     const cosA = Math.cos(angle);
     const sinA = Math.sin(angle);
@@ -50,8 +53,15 @@ export class Component {
 export class CompositeComponent extends Component {
   children: Component[] | null = null;
 
+  get mirrored(): boolean { return super.mirrored; }
+  set mirrored(v: boolean) {
+    super.mirrored = v;
+    if (this.children) for (const c of this.children) c.mirrored = v;
+  }
+
   pixels(): Map<string, Color> {
     if (!this.visible) return new Map();
+    if (this.children) for (const c of this.children) c.mirrored = this.mirrored;
     const merged = new Map<string, Color>();
     for (const child of this.children || []) {
       for (const [k, v] of child.pixels()) merged.set(k, v);
