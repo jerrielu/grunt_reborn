@@ -2,7 +2,7 @@
 
 ## 架构分层
 - **core/**：纯 TypeScript 模拟层，不依赖 Phaser/DOM/浏览器 API；随机经种子 PRNG，时间经 update(dt)。可被 Phaser 场景（图形）与 headlessRunner（文本 E2E）双重驱动。
-- **sprites/**：移植 pixelsmall 组件组合架构（Component/CompositeComponent/SpriteTemplate），运行时生成纹理；Phaser 负责播放（anims/flip）。
+- **sprites/**：组件组合架构（Component/CompositeComponent/SpriteTemplate），运行时生成纹理；Phaser 负责播放（anims/flip）。
 - **scenes/**：Phaser 渲染层，事件驱动同步 sim 状态。
 - **ui/**：DOM 覆盖层（菜单/手牌/奖励/结算），薄层，只消费事件。
   - 全屏规则：`#game` 用 `position:fixed; inset:0` 唯一地定义视口区域；任何页面/覆盖层都通过 `ui/screen.ts` 的 `mountScreen()` 挂载，自动带上 `.screen`（`position:absolute; inset:0`）铺满 `#game`。不要在新页面里使用 `position:fixed` 或 vh/dvh 自行计算全屏尺寸。
