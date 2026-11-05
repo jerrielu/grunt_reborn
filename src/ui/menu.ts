@@ -328,7 +328,13 @@ export function showMenu(controller: GameController, onStart: (generalId: string
 
   function startGachaDraw(count: number) {
     gachaResults = [];
-    for (let i = 0; i < count; i++) gachaResults.push(GACHA_POOL[Math.floor(Math.random() * GACHA_POOL.length)]);
+    for (let i = 0; i < count; i++) {
+      const id = GACHA_POOL[Math.floor(Math.random() * GACHA_POOL.length)];
+      gachaResults.push(id);
+      controller.meta.unlockCard(id);
+      controller.meta.state.deck.push(id);
+    }
+    controller.meta.persist();
     gachaAnimStart = performance.now();
     gachaAnimating = true;
     const total = count === 1 ? 500 : 10 * 110 + 500;

@@ -1,13 +1,12 @@
-import type { RunState, Buff, Unit } from "../types";
+import type { RunState, Buff, Unit, SummonUnit } from "../types";
 import { getCard } from "../../config/cards";
 import { heal } from "../combat";
-import type { EventEmitter } from "../events";
 
 const MAX_SUMMONS = 4;
 
-function makeBuff(cardId: string, name: string, rounds: number, partial: Partial<Buff>): Buff {
+function makeBuff(cardId: string, name: string, rounds: number, partial: Partial<Buff>, rng: { int: (a: number, b: number) => number }): Buff {
   return {
-    id: cardId + "_" + Math.random().toString(36).slice(2, 6),
+    id: cardId + "_" + rng.int(1000, 9999),
     kind: "tactic",
     name,
     roundsRemaining: rounds,
@@ -33,7 +32,7 @@ export function playCard(state: RunState, cardId: string, rng: { int: (a: number
     // same-type overwrite: remove existing tactic with same id
     state.buffs = state.buffs.filter((b) => !(b.kind === "tactic" && b.name === def.name));
     const rounds = def.durationRounds ?? 2;
-    const buff = makeBuff(cardId, def.name, rounds, tacticMods(cardId));
+    const buff = makeBuff(cardId, def.name, rounds, tacticMods(cardId), rng);
     state.buffs.push(buff);
     emit("card.played", { cardId, type: "tactic", name: def.name });
     emit("buff.applied", { name: def.name, rounds });
@@ -145,13 +144,13 @@ function spawnSummon(state: RunState, cardId: string, emit: (t: string, d: Recor
   let name = "步卒"; let hp = 40; let dmg = 6; let range = 34; let speed = 70; let interval = 0.9;
   if (cardId === "summonSpearman") { name = "矛手"; hp = 25; dmg = 10; range = 56; speed = 60; interval = 1.0; }
   else if (cardId === "summonShieldman") { name = "盾兵"; hp = 80; dmg = 4; range = 30; speed = 50; interval = 1.1; }
-  const sm: Unit = {
+  const sm: SummonUnit = {
     id, side: "summon", name, x: state.hero.x + 20, y: state.hero.y + 20,
     hp, maxHp: hp, speed, attackDamage: dmg, attackRange: range, attackInterval: interval, attackCooldown: 0,
     radius: 12, alive: true, targetId: null, facing: 0,
     damageTakenMul: 1, damageDealtMul: 1, speedMul: 1, attackIntervalMul: 1, knockVx: 0, knockVy: 0,
-  } as Unit;
-  state.summons.push(sm as any);
+  };
+  state.summons.push(sm);
   emit("summon.spawn", { id, name, count: state.summons.filter((s) => s.alive).length });
 }
 

@@ -53,6 +53,7 @@ export class BattleSim {
   state: RunState;
   events: EventEmitter;
   rng: Rng;
+  private handledDeaths: Set<number> = new Set();
 
   constructor(state: RunState) {
     this.state = state;
@@ -79,17 +80,12 @@ export class BattleSim {
     s.fightSeconds = 10;
     // schedule waves
     const perWave = 3 + Math.floor((s.level - 1) / 1);
-    const hpMul = 1 + 0.25 * (s.level - 1);
-    const atkMul = 1 + 0.12 * (s.level - 1);
     for (let w = 0; w < s.wavesTotal; w++) {
       const t = 1 + w * 6;
       for (let i = 0; i < perWave; i++) {
         s.spawnQueue.push({ kind: "grunt", at: t + i * 0.3 });
       }
     }
-    // store scaling on state via a side channel (balance): recompute in spawn
-    (s as any)._hpMul = hpMul;
-    (s as any)._atkMul = atkMul;
     this.emit("level.start", { level: s.level, waves: s.wavesTotal });
     this.emit("phase.changed", { phase: "fight" });
   }
@@ -180,8 +176,8 @@ export class BattleSim {
   private spawnEnemy(kind: "grunt" | "elite" | "boss"): void {
     const s = this.state;
     const id = s.nextUnitId++;
-    const hpMul = (s as any)._hpMul ?? 1;
-    const atkMul = (s as any)._atkMul ?? 1;
+    const hpMul = 1 + 0.25 * (s.level - 1);
+    const atkMul = 1 + 0.12 * (s.level - 1);
     let x = this.rng.int(WALL, ARENA.w - WALL);
     const y = WALL + 20;
 
@@ -385,14 +381,14 @@ export class BattleSim {
   private handleDeaths(): void {
     const s = this.state;
     for (const e of s.enemies) {
-      if (!e.alive && !(e as any)._deathHandled) {
-        (e as any)._deathHandled = true;
+      if (!e.alive && !this.handledDeaths.has(e.id)) {
+        this.handledDeaths.add(e.id);
         this.emit("unit.died", { id: e.id, side: "enemy", kind: e.kind });
       }
     }
     for (const sm of s.summons) {
-      if (!sm.alive && !(sm as any)._deathHandled) {
-        (sm as any)._deathHandled = true;
+      if (!sm.alive && !this.handledDeaths.has(sm.id)) {
+        this.handledDeaths.add(sm.id);
         this.emit("unit.died", { id: sm.id, side: "summon" });
       }
     }
