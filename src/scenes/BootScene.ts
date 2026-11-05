@@ -4,31 +4,30 @@ import { SuitSpriteTemplate } from "../sprites/suit";
 import { VanguardSpriteTemplate } from "../sprites/vanguard";
 import { Sword } from "../sprites/components/sword";
 
+const DIRS = ["down", "up", "left", "right"] as const;
+
 export class BootScene extends Phaser.Scene {
   constructor() { super({ key: "BootScene" }); }
 
   create(): void {
-    const tpl = new SuitSpriteTemplate();
-    const canvas = tpl.renderToCanvas();
-    const tex = this.textures.createCanvas("hero", 64, 64);
-    if (tex) {
-      tex.getContext().drawImage(canvas, 0, 0);
-      tex.refresh();
+    const makeTex = (key: string, tpl: any) => {
+      const canvas = tpl.renderToCanvas();
+      const tex = this.textures.createCanvas(key, 64, 64);
+      if (tex) {
+        tex.getContext().drawImage(canvas, 0, 0);
+        tex.refresh();
+      }
+    };
+
+    for (const dir of DIRS) {
+      makeTex(`hero_${dir}`, new SuitSpriteTemplate(dir));
+      makeTex(`soldier_${dir}`, new MenSpriteTemplate(dir));
+      makeTex(`vanguard_${dir}`, new VanguardSpriteTemplate(dir));
     }
-    const stpl = new MenSpriteTemplate();
-    const soldierCanvas = stpl.renderToCanvas();
-    const soldierTex = this.textures.createCanvas("soldier", 64, 64);
-    if (soldierTex) {
-      soldierTex.getContext().drawImage(soldierCanvas, 0, 0);
-      soldierTex.refresh();
-    }
-    const vtpl = new VanguardSpriteTemplate();
-    const vcanvas = vtpl.renderToCanvas();
-    const vtex = this.textures.createCanvas("vanguard", 64, 64);
-    if (vtex) {
-      vtex.getContext().drawImage(vcanvas, 0, 0);
-      vtex.refresh();
-    }
+    // backward-compat aliases
+    makeTex("hero", new SuitSpriteTemplate("down"));
+    makeTex("soldier", new MenSpriteTemplate("down"));
+    makeTex("vanguard", new VanguardSpriteTemplate("down"));
 
     const ssword = new Sword([32, 32]);
     const scanvas = document.createElement("canvas");

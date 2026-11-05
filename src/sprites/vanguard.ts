@@ -8,9 +8,23 @@ export class VanguardSpriteTemplate extends SpriteTemplate {
   static HEIGHT = 64;
   static DEFAULT_OUTPUT = "vanguard.png";
 
-  COMPONENTS = [
-    new Horse([32, 40]),
-    new Body([32, 26], [50, 100, 200, 255]),
-    new Head([32, 18]),
-  ];
+  constructor(dir: string = "down") {
+    super();
+    const mirrored = dir === "left";
+    const back = dir === "up";
+    const head = new Head([32, 18]);
+    if (back) {
+      const hair = (head as any).children?.[1];
+      if (hair) hair.clip = null;
+      const face = (head as any).children?.[2];
+      if (face) face.visible = false;
+    }
+    const comps: any[] = [
+      new Horse([32, 40]),
+      new Body([32, 26], [50, 100, 200, 255]),
+      head,
+    ];
+    if (mirrored) for (const c of comps) c.mirrored = true;
+    this.COMPONENTS = comps;
+  }
 }

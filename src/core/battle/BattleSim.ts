@@ -265,6 +265,7 @@ export class BattleSim {
       }
     }
 
+    if (target) h.facing = Math.atan2(target.y - h.y, target.x - h.x);
     // attack
     h.attackCooldown = Math.max(0, h.attackCooldown - dt);
     if (target && distance(h, target) <= h.attackRange + 4 && h.attackCooldown <= 0) {
@@ -362,6 +363,7 @@ export class BattleSim {
     if (!target) { sm.targetId = null; return; }
     sm.targetId = target.id;
     const dx = target.x - sm.x; const dy = target.y - sm.y;
+    sm.facing = Math.atan2(dy, dx);
     const d = distance(sm, target);
     const speed = sm.speed * sm.speedMul;
     if (d > sm.attackRange * 0.9) {

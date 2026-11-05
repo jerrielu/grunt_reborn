@@ -7,12 +7,26 @@ import { Leg } from "./components/leg";
 export class MenSpriteTemplate extends SpriteTemplate {
   static DEFAULT_OUTPUT = "men.png";
 
-  COMPONENTS = [
-    new Head([32, 18]),
-    new Body([32, 30]),
-    new Arm([22, 28]),
-    new Arm([42, 28]),
-    new Leg([28, 38], "left"),
-    new Leg([36, 38], "right"),
-  ];
+  constructor(dir: string = "down") {
+    super();
+    const mirrored = dir === "left";
+    const back = dir === "up";
+    const head = new Head([32, 18]);
+    if (back) {
+      const hair = (head as any).children?.[1];
+      if (hair) hair.clip = null;
+      const face = (head as any).children?.[2];
+      if (face) face.visible = false;
+    }
+    const comps: any[] = [
+      head,
+      new Body([32, 30]),
+      new Arm([22, 28]),
+      new Arm([42, 28]),
+      new Leg([28, 38], "left"),
+      new Leg([36, 38], "right"),
+    ];
+    if (mirrored) for (const c of comps) c.mirrored = true;
+    this.COMPONENTS = comps;
+  }
 }

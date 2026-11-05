@@ -149,6 +149,15 @@ export class BattleScene extends Phaser.Scene {
     // fixed camera: no follow, view stays within arena bounds
   }
 
+
+  dirFromFacing(facing: number): string {
+    const deg = ((facing * 180 / Math.PI) % 360 + 360) % 360;
+    if (deg >= 315 || deg < 45) return "right";
+    if (deg >= 45 && deg < 135) return "down";
+    if (deg >= 135 && deg < 225) return "left";
+    return "up";
+  }
+
   syncUnits(): void {
     const s = this.sim.state;
     const all: Unit[] = [s.hero, ...s.enemies, ...s.summons].filter((u) => u.alive);
@@ -160,8 +169,10 @@ export class BattleScene extends Phaser.Scene {
       let c = this.unitSprites.get(u.id);
       if (!c) {
         c = this.add.container(u.x, u.y);
-        const texKey = u.side === "enemy" ? "soldier" : (u.side === "hero" && this.sim.state.generalId === "vanguard" ? "vanguard" : "hero");
+        const base = u.side === "enemy" ? "soldier" : (u.side === "hero" && this.sim.state.generalId === "vanguard" ? "vanguard" : "hero");
+        const texKey = `${base}_down`;
         const sprite = this.add.image(0, 0, texKey);
+        sprite.setData("base", base);
          sprite.setScale(0.448);
         if (u.side === "enemy") sprite.setTint(0xaa4444);
         else if (u.side === "summon") sprite.setTint(0x44aa44);
@@ -179,6 +190,12 @@ export class BattleScene extends Phaser.Scene {
         this.hpBars.set(u.id, hb);
       }
       c.setPosition(u.x, u.y);
+      const spr = c.list[0] as Phaser.GameObjects.Image;
+      if (spr) {
+        const base = (spr.getData("base") as string) || (u.side === "enemy" ? "soldier" : (u.side === "hero" && this.sim.state.generalId === "vanguard" ? "vanguard" : "hero"));
+        spr.setData("base", base);
+        spr.setTexture(`${base}_${this.dirFromFacing(u.facing)}`);
+      }
       const hb = this.hpBars.get(u.id)!;
       hb.clear();
       hb.fillStyle(0x222222, 0.8);
