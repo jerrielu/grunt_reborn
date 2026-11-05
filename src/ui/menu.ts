@@ -3,6 +3,7 @@ import { GameController } from "../game";
 import { CARDS, getCard } from "../config/cards";
 import { UNLOCKS } from "../config/unlocks";
 import { openDeckBuilder } from "./deckBuilder";
+import { openSettings } from "./settings";
 import { gameRoot, mountScreen } from "./screen";
 import { renderCardCanvas } from "../sprites/cardSprite";
 
@@ -44,6 +45,7 @@ export function showMenu(controller: GameController, onStart: (generalId: string
     { id: "start", label: "开始游戏", x: btnX, y: 240, w: btnW, h: btnH },
     { id: "gacha", label: "抽卡", x: btnX, y: 292, w: btnW, h: btnH },
     { id: "cards", label: "卡牌构筑", x: btnX, y: 344, w: btnW, h: btnH },
+    { id: "settings", label: "设置", x: btnX, y: 396, w: btnW, h: btnH },
   ];
 
   let generalRects: { id: string; x: number; y: number; w: number; h: number }[] = [];
@@ -163,7 +165,7 @@ export function showMenu(controller: GameController, onStart: (generalId: string
         octx.fillText(g.label, r.x + r.w / 2, r.y + r.h / 2);
       } else if (screen === "main") {
         octx.font = "bold 13px monospace";
-        const mainLabels: Record<string,string> = { start: "开始游戏", gacha: "抽卡", cards: "卡牌构筑" };
+         const mainLabels: Record<string,string> = { start: "开始游戏", gacha: "抽卡", cards: "卡牌构筑", settings: "设置" };
         octx.fillText(mainLabels[r.id] ?? r.id, r.x + r.w / 2, r.y + r.h / 2);
       } else if (screen === "gacha") {
         octx.font = "bold 12px monospace";
@@ -345,6 +347,7 @@ export function showMenu(controller: GameController, onStart: (generalId: string
       if (r.id === "start") { screen = "generals"; hovered = -1; refresh(); }
       else if (r.id === "gacha") { screen = "gacha"; gachaResults = []; gachaAnimating = false; hovered = -1; refresh(); }
       else if (r.id === "cards") { openDeckBuilder(controller); }
+      else if (r.id === "settings") { openSettings(controller); }
     } else if (screen === "generals") {
       const gens = allGenerals.filter((gg) => controller.meta.state.unlockedGenerals.includes(gg.id));
       const g = gens[i];
