@@ -50,6 +50,15 @@ export class BattleScene extends Phaser.Scene {
       const tc = tgt ? this.unitSprites.get(tgt.id) : undefined;
       if (tc) this.playHit(tc);
     });
+    this.sim.events.on("summon.attack", (e) => {
+      const tgt = this.findUnit(e.data.targetId as number);
+      if (tgt) this.spawnDamageText(tgt.x, tgt.y, `-${e.data.dmg}`, "#88ff88");
+      const atk = this.findUnit(e.data.attackerId as number);
+      const ac = atk ? this.unitSprites.get(atk.id) : undefined;
+      if (ac && tgt) this.playAttack(ac, tgt.x, tgt.y);
+      const tc = tgt ? this.unitSprites.get(tgt.id) : undefined;
+      if (tc) this.playHit(tc);
+    });
   }
 
   findUnit(id: number): Unit | undefined {
@@ -65,17 +74,19 @@ export class BattleScene extends Phaser.Scene {
   }
 
   playAttack(c: Phaser.GameObjects.Container, tx: number, ty: number): void {
-    const proj = this.add.rectangle(c.x, c.y, 6, 24, 0xc8c8d2);
-    proj.setOrigin(0.5, 1);
     const angle = Phaser.Math.Angle.Between(c.x, c.y, tx, ty);
-    proj.setRotation(angle + Math.PI / 2);
+    const sword = this.add.container(c.x, c.y);
+    const handle = this.add.rectangle(0, 8, 4, 10, 0x8b5a2b);
+    const blade = this.add.rectangle(0, -6, 6, 24, 0xdcdcdc);
+    sword.add([handle, blade]);
+    sword.setRotation(angle - Math.PI / 3);
     this.tweens.add({
-      targets: proj,
-      x: tx,
-      y: ty,
-      duration: 180,
-      ease: "Quad.easeOut",
-      onComplete: () => proj.destroy(),
+      targets: sword,
+      rotation: angle + Math.PI / 3,
+      alpha: 0,
+      duration: 220,
+      ease: "Cubic.easeOut",
+      onComplete: () => sword.destroy(),
     });
     this.tweens.add({ targets: c, scaleX: 1.15, scaleY: 1.15, duration: 80, yoyo: true, ease: "Quad.easeOut" });
   }
