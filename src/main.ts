@@ -3,6 +3,7 @@ import { BootScene } from "./scenes/BootScene";
 import { BattleScene } from "./scenes/BattleScene";
 import { GameController } from "./game";
 import { showMenu } from "./ui/menu";
+import { initPWA, setUpdateHandler } from "./pwa";
 import { attachHandPanel } from "./ui/handPanel";
 
 const controller = new GameController();
@@ -27,6 +28,7 @@ const config: Phaser.Types.Core.GameConfig = {
 const game = new Phaser.Game(config);
 
 function startRun(generalId: string): void {
+  setUpdateHandler(null);
   const sim = controller.startRun(generalId);
   attachHandPanel(sim, (cardId) => sim.confirmReward(cardId));
   const scene = game.scene.start("BattleScene", { sim });
@@ -46,4 +48,5 @@ function startRun(generalId: string): void {
 }
 
 showMenu(controller, startRun);
+initPWA();
 export { controller };
