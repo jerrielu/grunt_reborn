@@ -33,24 +33,48 @@ export function formatSimEvent(e: GameEvent): string | null {
     case "enemy.killed":
       return `一名${kindName(d.kind)}轰然倒地！`;
     case "hero.attack": {
-      if (d.omni) return "主角使出无敌斩，寒光连闪，连斩不止！";
-      if (d.killed) return `主角一剑封喉，斩杀一名${kindName(undefined)}！`;
-      return null;
+      const dmg = d.dmg;
+      if (d.omni) return `主角使出无敌斩，寒光连闪，连斩不止！（每击 ${dmg} 点伤害）`;
+      if (d.killed) return `主角一剑封喉，斩杀一名${kindName(undefined)}！（${dmg} 点伤害）`;
+      return `主角攻击造成 ${dmg} 点伤害`;
     }
-    case "summon.attack":
-      return d.killed ? "召唤物建功，击毙一名敌人！" : null;
+    case "enemy.attack": {
+      const dmg = d.dmg;
+      if (d.killed) return `敌人反击，造成 ${dmg} 点伤害，目标阵亡！`;
+      return `敌人攻击造成 ${dmg} 点伤害`;
+    }
+    case "summon.attack": {
+      const dmg = d.dmg;
+      if (d.killed) return `召唤物建功，击毙一名敌人！（${dmg} 点伤害）`;
+      return `召唤物攻击造成 ${dmg} 点伤害`;
+    }
     case "unit.died":
       if (d.side === "summon") return "一名召唤物不幸阵亡……";
       if (d.side === "hero") return "主角倒下，战局急转直下！";
       return null;
-    case "card.played":
-      return `打出卡牌「${cardName(d.cardId)}」，战局再起波澜！`;
+    case "card.played": {
+      const base = `打出卡牌「${cardName(d.cardId)}」，战局再起波澜！`;
+      if (d.type === "summon" && d.count) return `${base}（召唤 ${d.count} 个单位）`;
+      return base;
+    }
     case "card.rejected":
       return `出牌被拒：${String(d.reason ?? "")}`;
     case "card.drawn":
       return `抽到卡牌「${cardName(d.defId)}」，如虎添翼！`;
     case "round.start":
       return `第 ${d.round} 回合：整军再战！`;
+    case "buff.applied":
+      return `战法「${String(d.name ?? "")}」生效，持续 ${d.rounds} 回合！`;
+    case "instant.shockwave":
+      return `主角发出冲击波，造成 ${d.dmg} 点范围伤害！`;
+    case "instant.firstAid":
+      return `主角使用急救，恢复 ${d.heal} 点生命！`;
+    case "instant.disrupt":
+      return "主角施放扰乱，敌军移速减半！";
+    case "instant.roar":
+      return "主角怒吼，本回合伤害提升 50%！";
+    case "summon.spawn":
+      return `召唤出${String(d.name ?? "")}，场上现有 ${d.count} 个召唤物！`;
     default:
       return null;
   }
