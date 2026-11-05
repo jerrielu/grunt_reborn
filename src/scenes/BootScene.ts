@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { MenSpriteTemplate } from "../sprites/men";
 import { VanguardSpriteTemplate } from "../sprites/vanguard";
+import { Sword } from "../sprites/components/sword";
 
 export class BootScene extends Phaser.Scene {
   constructor() { super({ key: "BootScene" }); }
@@ -19,6 +20,22 @@ export class BootScene extends Phaser.Scene {
     if (vtex) {
       vtex.getContext().drawImage(vcanvas, 0, 0);
       vtex.refresh();
+    }
+
+    const ssword = new Sword([32, 32]);
+    const scanvas = document.createElement("canvas");
+    scanvas.width = 64; scanvas.height = 64;
+    const sctx = scanvas.getContext("2d")!;
+    sctx.clearRect(0, 0, 64, 64);
+    for (const [key, color] of ssword.pixels()) {
+      const [x, y] = key.split(",").map(Number);
+      sctx.fillStyle = `rgba(${color[0]},${color[1]},${color[2]},${color[3] / 255})`;
+      sctx.fillRect(x, y, 1, 1);
+    }
+    const stex = this.textures.createCanvas("sword", 64, 64);
+    if (stex) {
+      stex.getContext().drawImage(scanvas, 0, 0);
+      stex.refresh();
     }
 
     // Force nearest-neighbor filtering for crisp pixel art

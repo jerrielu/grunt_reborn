@@ -74,20 +74,41 @@ export class BattleScene extends Phaser.Scene {
   }
 
   playAttack(c: Phaser.GameObjects.Container, tx: number, ty: number): void {
-    const angle = Phaser.Math.Angle.Between(c.x, c.y, tx, ty);
-    const sword = this.add.container(c.x, c.y);
-    const handle = this.add.rectangle(0, 8, 4, 10, 0x8b5a2b);
-    const blade = this.add.rectangle(0, -6, 6, 24, 0xdcdcdc);
-    sword.add([handle, blade]);
-    sword.setRotation(angle - Math.PI / 3);
-    this.tweens.add({
-      targets: sword,
-      rotation: angle + Math.PI / 3,
-      alpha: 0,
-      duration: 220,
-      ease: "Cubic.easeOut",
-      onComplete: () => sword.destroy(),
-    });
+    const sw = c.getData("sword") as Phaser.GameObjects.Image | undefined;
+    if (sw) {
+      const sx = sw.x, sy = sw.y;
+      this.tweens.add({
+        targets: sw,
+        x: tx - c.x,
+        y: ty - c.y,
+        duration: 120,
+        ease: "Cubic.easeOut",
+        onComplete: () => {
+          this.tweens.add({
+            targets: sw,
+            x: sx,
+            y: sy,
+            duration: 180,
+            ease: "Cubic.easeIn",
+          });
+        },
+      });
+    } else {
+      const angle = Phaser.Math.Angle.Between(c.x, c.y, tx, ty);
+      const sword = this.add.container(c.x, c.y);
+      const handle = this.add.rectangle(0, 8, 4, 10, 0x8b5a2b);
+      const blade = this.add.rectangle(0, -6, 6, 24, 0xdcdcdc);
+      sword.add([handle, blade]);
+      sword.setRotation(angle - Math.PI / 3);
+      this.tweens.add({
+        targets: sword,
+        rotation: angle + Math.PI / 3,
+        alpha: 0,
+        duration: 220,
+        ease: "Cubic.easeOut",
+        onComplete: () => sword.destroy(),
+      });
+    }
     this.tweens.add({ targets: c, scaleX: 1.15, scaleY: 1.15, duration: 80, yoyo: true, ease: "Quad.easeOut" });
   }
 
@@ -110,6 +131,11 @@ export class BattleScene extends Phaser.Scene {
       const bob = Math.sin(t * 6 + id) * 1.5;
       const u = this.findUnit(id);
       if (u) c.setY(u.y + bob);
+      const sw = c.getData("sword") as Phaser.GameObjects.Image | undefined;
+      if (sw && this.tweens.getTweensOf(sw).length === 0) {
+        sw.x = 16 + Math.sin(t * 2 + id) * 1.5;
+        sw.y = -4 + Math.sin(t * 4 + id) * 4;
+      }
     }
     // fixed camera: no follow, view stays within arena bounds
   }
@@ -133,6 +159,12 @@ export class BattleScene extends Phaser.Scene {
         c.add(sprite);
         const label = this.add.text(0, -13, u.name, { fontSize: "8px", color: "#fff", fontFamily: "monospace" }).setOrigin(0.5);
         c.add(label);
+        if (u.side === "hero") {
+          const sw = this.add.image(16, -4, "sword");
+          sw.setScale(0.448);
+          c.add(sw);
+          c.setData("sword", sw);
+        }
         this.unitSprites.set(u.id, c);
         const hb = this.add.graphics();
         this.hpBars.set(u.id, hb);

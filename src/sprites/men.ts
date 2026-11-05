@@ -3,7 +3,7 @@ import { Head } from "./components/head";
 import { Body } from "./components/body";
 import { Arm } from "./components/arm";
 import { Leg } from "./components/leg";
-import { Weapon } from "./components/weapon";
+import { Sword } from "./components/sword";
 
 export class MenSpriteTemplate extends SpriteTemplate {
   static DEFAULT_OUTPUT = "men.png";
@@ -13,7 +13,7 @@ export class MenSpriteTemplate extends SpriteTemplate {
     new Body([32, 30]),
     new Arm([22, 28]),
     new Arm([42, 28]),
-    new Weapon([44, 26]),
+    new Sword([44, 26]),
     new Leg([28, 38], "left"),
     new Leg([36, 38], "right"),
   ];
