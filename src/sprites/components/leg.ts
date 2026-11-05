@@ -1,11 +1,11 @@
 import { Component, CompositeComponent, Color } from "./base";
 
 const _LEG_RECTS: [number, number, number, number][] = [
-  [-2, -4, 4, 1], [-2, -3, 4, 1], [-2, -2, 4, 1], [-2, -1, 4, 1],
-  [-2, 0, 4, 1], [-2, 1, 4, 1],
+  [-3, -4, 6, 1], [-3, -3, 6, 1], [-3, -2, 6, 1], [-3, -1, 6, 1],
+  [-3, 0, 6, 1], [-3, 1, 6, 1],
 ];
 const _SHOE_RECTS: [number, number, number, number][] = [
-  [-3, 0, 6, 1], [-3, 1, 6, 1], [-3, 2, 6, 1],
+  [-4, 0, 8, 1], [-4, 1, 8, 1], [-4, 2, 8, 1],
 ];
 
 const PANTS: Color = [60, 60, 80, 255];

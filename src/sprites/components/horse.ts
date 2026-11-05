@@ -54,7 +54,7 @@ export class Horse extends CompositeComponent {
       const l = new Component();
       l.color = DARK;
       l.position = [px + d[0], py + d[1]];
-      l.rects = [[-1, -3, 3, 3]] as any;
+      l.rects = [[-2, -4, 4, 4]] as any;
       return l;
     });
 
