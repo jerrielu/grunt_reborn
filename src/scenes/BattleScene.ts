@@ -77,10 +77,17 @@ export class BattleScene extends Phaser.Scene {
     const sw = c.getData("sword") as Phaser.GameObjects.Image | undefined;
     if (sw) {
       const sx = sw.x, sy = sw.y;
+      const dx = tx - c.x, dy = ty - c.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const tipPx = 28 * sw.scaleX;
+      const txr = dx - (dx / dist) * tipPx;
+      const tyr = dy - (dy / dist) * tipPx;
+      const angle = Math.atan2(dy, dx);
+      sw.setRotation(angle + Math.PI / 2);
       this.tweens.add({
         targets: sw,
-        x: tx - c.x,
-        y: ty - c.y,
+        x: txr,
+        y: tyr,
         duration: 120,
         ease: "Cubic.easeOut",
         onComplete: () => {
@@ -90,6 +97,7 @@ export class BattleScene extends Phaser.Scene {
             y: sy,
             duration: 180,
             ease: "Cubic.easeIn",
+            onComplete: () => { sw.setRotation(0); },
           });
         },
       });
@@ -135,6 +143,7 @@ export class BattleScene extends Phaser.Scene {
       if (sw && this.tweens.getTweensOf(sw).length === 0) {
         sw.x = 16 + Math.sin(t * 2 + id) * 1.5;
         sw.y = -4 + Math.sin(t * 4 + id) * 4;
+        sw.setRotation(0);
       }
     }
     // fixed camera: no follow, view stays within arena bounds
