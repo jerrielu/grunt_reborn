@@ -6,10 +6,10 @@ const TIE: Color = [180, 40, 40, 255];
 const TIE_KNOT: Color = [150, 30, 30, 255];
 
 const _JACKET_RECTS: [number, number, number, number][] = [
-  [-9, -5, 18, 1], [-9, -4, 18, 1], [-9, -3, 18, 1], [-9, -2, 18, 1],
-  [-9, -1, 18, 1], [-9, 0, 18, 1], [-9, 1, 18, 1], [-9, 2, 18, 1],
-  [-9, 3, 18, 1], [-9, 4, 18, 1],
-  [-7, 5, 14, 1], [-7, 6, 14, 1],
+  [-6, -7, 12, 1], [-7, -6, 14, 1], [-8, -5, 16, 1], [-8, -4, 16, 1],
+  [-8, -3, 16, 1], [-8, -2, 16, 1], [-8, -1, 16, 1], [-8, 0, 16, 1],
+  [-8, 1, 16, 1], [-8, 2, 16, 1], [-7, 3, 14, 1], [-7, 4, 14, 1],
+  [-6, 5, 12, 1], [-5, 6, 10, 1],
 ];
 
 export class SuitBody extends CompositeComponent {
@@ -25,7 +25,7 @@ export class SuitBody extends CompositeComponent {
     const shirt = new Component();
     shirt.color = SHIRT;
     shirt.position = [px, py];
-    shirt.rects = [[-3, -5, 6, 4], [-2, -1, 4, 3]] as any;
+    shirt.rects = [[-3, -6, 6, 5], [-2, -1, 4, 5]] as any;
 
     const knot = new Component();
     knot.color = TIE_KNOT;
@@ -35,7 +35,7 @@ export class SuitBody extends CompositeComponent {
     const tie = new Component();
     tie.color = TIE;
     tie.position = [px, py];
-    tie.rects = [[-1, 0, 2, 8]] as any;
+    tie.rects = [[-1, 0, 2, 10]] as any;
 
     this.children = [jacket, shirt, knot, tie];
     this.position = position;

@@ -11,7 +11,7 @@ export class MenSpriteTemplate extends SpriteTemplate {
     super();
     const mirrored = dir === "left";
     const back = dir === "up";
-    const head = new Head([32, 18]);
+    const head = new Head([32, 16]);
     if (back) {
       const hair = (head as any).children?.[1];
       if (hair) hair.clip = null;
@@ -24,10 +24,10 @@ export class MenSpriteTemplate extends SpriteTemplate {
     const comps: any[] = [
       head,
       body,
-      new Arm([22, 28]),
-      new Arm([42, 28]),
-      new Leg([28, 38], "left"),
-      new Leg([36, 38], "right"),
+      new Arm([22, 27]),
+      new Arm([42, 27]),
+      new Leg([28, 39], "left"),
+      new Leg([36, 39], "right"),
     ];
     if (mirrored) for (const c of comps) c.mirrored = true;
     this.COMPONENTS = comps;

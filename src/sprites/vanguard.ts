@@ -12,7 +12,7 @@ export class VanguardSpriteTemplate extends SpriteTemplate {
     super();
     const mirrored = dir === "left";
     const back = dir === "up";
-    const head = new Head([32, 18]);
+    const head = new Head([32, 16]);
     if (back) {
       const hair = (head as any).children?.[1];
       if (hair) hair.clip = null;
@@ -20,7 +20,7 @@ export class VanguardSpriteTemplate extends SpriteTemplate {
       if (face) face.visible = false;
     }
     const bodyRot = dir === "right" ? 90 : dir === "left" ? 270 : 0;
-    const body = new Body([32, 26], [50, 100, 200, 255]);
+    const body = new Body([32, 28], [50, 100, 200, 255]);
     body.rotation = bodyRot;
     const comps: any[] = [
       new Horse([32, 40]),
