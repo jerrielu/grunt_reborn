@@ -416,7 +416,7 @@ export class BattleSim {
     const healAmt = Math.round(s.hero.maxHp * 0.3);
     heal(s.hero, healAmt);
     // reward choices: 3 distinct cards from a small pool
-    const pool = ["omnislash"];
+    const pool = CARDS.map((c) => c.id);
     const rng = this.rng;
     const picks: string[] = [];
     const avail = [...pool];

@@ -1,6 +1,6 @@
 // Pixelated DOM menu overlay rendered on a low-res canvas (nearest-neighbor upscale)
 import { GameController } from "../game";
-import { CARDS } from "../config/cards";
+import { CARDS, getCard } from "../config/cards";
 import { UNLOCKS } from "../config/unlocks";
 import { openDeckBuilder } from "./deckBuilder";
 import { gameRoot, mountScreen } from "./screen";
@@ -8,10 +8,8 @@ import { renderCardCanvas } from "../sprites/cardSprite";
 
 declare const __APP_VERSION__: string;
 
-const GACHA_POOL = ["omnislash","charge","guard","assassinate","frenzy","bait","slowHit","lurk","steady","bloodbath","spear","heavyArmor","swiftBoots","dagger","shockwave","firstAid","disrupt","roar","summonFootman","summonSpearman","summonShieldman","summonRally"];
-const GACHA_NAMES: Record<string,string> = {
-  omnislash:"无敌斩",charge:"冲锋",guard:"防御",assassinate:"刺杀",frenzy:"狂暴",bait:"诱饵",slowHit:"重击",lurk:"潜伏",steady:"稳守",bloodbath:"血浴",spear:"长矛",heavyArmor:"重甲",swiftBoots:"疾靴",dagger:"匕首",shockwave:"冲击波",firstAid:"急救",disrupt:"扰乱",roar:"咆哮",summonFootman:"召唤步兵",summonSpearman:"召唤枪兵",summonShieldman:"召唤盾兵",summonRally:"集结",
-};
+const GACHA_POOL = CARDS.map((c) => c.id);
+function gachaName(id: string): string { return getCard(id)?.name ?? id; }
 
 export function showMenu(controller: GameController, onStart: (generalId: string) => void): void {
   gameRoot().querySelectorAll(".overlay").forEach((e) => e.remove());
@@ -270,7 +268,7 @@ export function showMenu(controller: GameController, onStart: (generalId: string
           ctx.fillStyle = "#e8d9a8";
           ctx.font = "bold 9px monospace";
           ctx.textAlign = "center";
-          ctx.fillText(GACHA_NAMES[id] ?? id, cx, y + cardH + 12);
+          ctx.fillText(gachaName(id), cx, y + cardH + 12);
         }
       });
     }
