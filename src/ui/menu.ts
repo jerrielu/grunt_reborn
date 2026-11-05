@@ -1,7 +1,6 @@
 // Pixelated DOM menu overlay rendered on a low-res canvas (nearest-neighbor upscale)
 import { GameController } from "../game";
 import { CARDS, getCard } from "../config/cards";
-import { UNLOCKS } from "../config/unlocks";
 import { openDeckBuilder } from "./deckBuilder";
 import { openSettings } from "./settings";
 import { setUpdateHandler, applyUpdate } from "../pwa";
@@ -181,10 +180,8 @@ export function showMenu(controller: GameController, onStart: (generalId: string
         octx.fillText(c.name, r.x + 6, r.y + r.h / 2);
         octx.textAlign = "right";
         octx.font = "9px monospace";
-        octx.fillStyle = unlocked ? "#c9a86a" : "#ffaa66";
-        const unlockDef = UNLOCKS.find((u) => u.id === c.id);
-        const cost = unlockDef ? unlockDef.cost : 0;
-        octx.fillText(unlocked ? "已解锁" : (cost + "积分"), r.x + r.w - 6, r.y + r.h / 2);
+         octx.fillStyle = unlocked ? "#c9a86a" : "#ffaa66";
+        octx.fillText(unlocked ? "已解锁" : "未解锁", r.x + r.w - 6, r.y + r.h / 2);
         octx.textAlign = "center";
       }
     });

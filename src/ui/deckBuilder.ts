@@ -1,6 +1,5 @@
 import { GameController } from "../game";
 import { CARDS, getCard } from "../config/cards";
-import { UNLOCKS, canPurchase } from "../config/unlocks";
 import { renderCardCanvas } from "../sprites/cardSprite";
 import { mountScreen } from "./screen";
 
@@ -238,13 +237,7 @@ export function openDeckBuilder(controller: GameController): void {
       badge.style.cssText = "position:absolute;right:2px;top:2px;background:#0a0604;color:#e8d9a8;font-size:9px;padding:0 3px;border:1px solid #c9a86a;";
       badge.textContent = String(copies);
       cell.appendChild(badge);
-      if (!unlocked) {
-        const lock = document.createElement("div");
-        lock.style.cssText = "position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);color:#c9a86a;font-size:10px;text-align:center;";
-        const u = UNLOCKS.find((x) => x.id === id);
-        lock.textContent = u ? `${u.cost}积分` : "未解锁";
-        cell.appendChild(lock);
-      }
+      // (cards are always unlocked; no lock overlay)
       cell.onclick = () => {
         if (atCap) { flash("已达携带上限"); return; }
         addToDeck(id);

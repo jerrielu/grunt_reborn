@@ -52,11 +52,6 @@ export class MetaStore {
   persist(): void { this.adapter.save(JSON.stringify(this.state)); }
 
   addPoints(p: number): void { this.state.points += p; this.state.totalPointsEarned += p; }
-  spendPoints(p: number): boolean {
-    if (this.state.points < p) return false;
-    this.state.points -= p;
-    return true;
-  }
   recordRun(levelReached: number): void {
     this.state.runs += 1;
     if (levelReached > this.state.bestLevel) this.state.bestLevel = levelReached;
@@ -70,15 +65,6 @@ export class MetaStore {
   setBonusTier(id: string, tier: number): void { this.state.globalBonuses[id] = tier; }
   getBonusTier(id: string): number { return this.state.globalBonuses[id] ?? 0; }
   markTutorialDone(): void { this.state.tutorialDone = true; }
-
-  applyUnlock(def: { id: string; type: string }): void {
-    if (def.type === "general") this.unlockGeneral(def.id);
-    else if (def.type === "card") this.unlockCard(def.id);
-    else if (def.type === "bonus") {
-      const cur = this.getBonusTier(def.id);
-      this.setBonusTier(def.id, cur + 1);
-    }
-  }
 
   globalMultiplier(kind: "damage" | "hp" | "points"): number {
     const tier = this.getBonusTier("bonus_" + (kind === "damage" ? "damage" : kind === "hp" ? "hp" : "points"));

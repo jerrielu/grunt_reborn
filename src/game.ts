@@ -3,7 +3,6 @@ import { MetaStore } from "./core/meta/MetaStore";
 import { LocalStorageAdapter } from "./save/localStorageAdapter";
 import { createRunState, BattleSim } from "./core/battle/BattleSim";
 import { computePoints } from "./core/meta/settlement";
-import { UNLOCKS, canPurchase } from "./config/unlocks";
 import { CARDS } from "./config/cards";
 
 export class GameController {
@@ -51,16 +50,6 @@ export class GameController {
     const level = sim.state.levelsCleared;
     this.sim = null;
     return { points: pts, level };
-  }
-
-  buyUnlock(id: string): boolean {
-    const def = UNLOCKS.find((u) => u.id === id);
-    if (!def) return false;
-    if (!canPurchase(this.meta.state, def)) return false;
-    if (def.type !== "card" && !this.meta.spendPoints(def.cost)) return false;
-    this.meta.applyUnlock(def);
-    this.meta.persist();
-    return true;
   }
 
   availableCards(): string[] { return this.meta.state.unlockedCards; }
