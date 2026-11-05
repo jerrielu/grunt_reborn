@@ -197,3 +197,7 @@
 - 无头文本 E2E + Vitest 单测
 - DOM 覆盖层：菜单、手牌面板、奖励三选一、战败结算
 EOF
+## 0.24.0
+- Reworked sprite joints (hands/feet/upper-lower body) for greater animation range.
+- Idle breathing now moves only the upper body; feet stay planted.
+- Added a ground shadow under each character.

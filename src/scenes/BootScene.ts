@@ -16,6 +16,8 @@ export class BootScene extends Phaser.Scene {
       if (tex) {
         tex.getContext().drawImage(canvas, 0, 0);
         tex.refresh();
+        try { (tex as any).add("upper", 0, 0, 0, 64, 40); } catch (e) { /* ignore */ }
+        try { (tex as any).add("lower", 0, 0, 40, 64, 24); } catch (e) { /* ignore */ }
       }
     };
 

@@ -18,16 +18,13 @@ export class BattleScene extends Phaser.Scene {
 
   create(): void {
     const w = 180, h = 335;
-    // reusable ground texture
     const key = TileFactory.ensureGroundTexture(this, w, h);
     const ground = this.add.image(0, 0, key).setOrigin(0, 0);
     const border = this.add.graphics();
     border.lineStyle(4, 0xc9a86a, 1);
     border.strokeRect(2, 2, w - 4, h - 4);
-    // camera
     this.cameras.main.setBounds(0, 0, w, h);
     this.cameras.main.setZoom(1);
-    // listen to sim events for damage numbers
     this.sim.events.on("unit.died", (e) => {
       const u = this.findUnit(e.data.id as number);
       if (u) this.spawnDamageText(u.x, u.y, "💀", "#ff6666");
@@ -121,24 +118,24 @@ export class BattleScene extends Phaser.Scene {
   }
 
   playHit(c: Phaser.GameObjects.Container): void {
-    const img = c.list[0] as Phaser.GameObjects.Image;
+    const img = c.getData("lower") as Phaser.GameObjects.Image;
     if (img) img.setTint(0xffffff);
-    this.tweens.add({ targets: c, x: c.x + 4, duration: 40, yoyo: true, repeat: 1, onComplete: () => { if (img) { img.clearTint(); } } });
+    this.tweens.add({ targets: c, x: c.x + 4, duration: 40, yoyo: true, repeat: 1, onComplete: () => { const l = c.getData("lower") as Phaser.GameObjects.Image; if (l) l.clearTint(); const u = c.getData("upper") as Phaser.GameObjects.Image; if (u) u.clearTint(); } });
   }
 
   update(_time: number, delta: number): void {
     const sim = this.sim;
     if (sim.state.phase === "fight") {
-      // sim.update is driven by controller or here; drive here
       sim.update(delta / 1000);
     }
     this.syncUnits();
-    const hero = sim.state.hero;
     const t = _time / 1000;
     for (const [id, c] of this.unitSprites) {
-      const bob = Math.sin(t * 6 + id) * 1.5;
-      const u = this.findUnit(id);
-      if (u) c.setY(u.y + bob);
+      const upper = c.getData("upper") as Phaser.GameObjects.Image | undefined;
+      if (upper) {
+        const bob = Math.sin(t * 4 + id) * 1.2;
+        upper.setY(bob);
+      }
       const sw = c.getData("sword") as Phaser.GameObjects.Image | undefined;
       if (sw && this.tweens.getTweensOf(sw).length === 0) {
         sw.x = 16 + Math.sin(t * 2 + id) * 1.5;
@@ -146,9 +143,7 @@ export class BattleScene extends Phaser.Scene {
         sw.setRotation(0);
       }
     }
-    // fixed camera: no follow, view stays within arena bounds
   }
-
 
   dirFromFacing(facing: number): string {
     const deg = ((facing * 180 / Math.PI) % 360 + 360) % 360;
@@ -161,7 +156,6 @@ export class BattleScene extends Phaser.Scene {
   syncUnits(): void {
     const s = this.sim.state;
     const all: Unit[] = [s.hero, ...s.enemies, ...s.summons].filter((u) => u.alive);
-    // remove dead
     for (const [id, c] of this.unitSprites) {
       if (!all.find((u) => u.id === id)) { c.destroy(); this.unitSprites.delete(id); this.hpBars.get(id)?.destroy(); this.hpBars.delete(id); }
     }
@@ -170,13 +164,23 @@ export class BattleScene extends Phaser.Scene {
       if (!c) {
         c = this.add.container(u.x, u.y);
         const base = u.side === "enemy" ? "soldier" : (u.side === "hero" && this.sim.state.generalId === "vanguard" ? "vanguard" : "hero");
-        const texKey = `${base}_down`;
-        const sprite = this.add.image(0, 0, texKey);
-        sprite.setData("base", base);
-         sprite.setScale(0.448);
-        if (u.side === "enemy") sprite.setTint(0xaa4444);
-        else if (u.side === "summon") sprite.setTint(0x44aa44);
-        c.add(sprite);
+        const shadow = this.add.ellipse(0, 14, 26, 8, 0x000000, 0.35);
+        c.add(shadow);
+        c.setData("shadow", shadow);
+        const lower = this.add.image(0, 0, `${base}_down`, "lower");
+        lower.setData("base", base);
+        lower.setScale(0.448);
+        if (u.side === "enemy") lower.setTint(0xaa4444);
+        else if (u.side === "summon") lower.setTint(0x44aa44);
+        c.add(lower);
+        const upper = this.add.image(0, 0, `${base}_down`, "upper");
+        upper.setData("base", base);
+        upper.setScale(0.448);
+        if (u.side === "enemy") upper.setTint(0xaa4444);
+        else if (u.side === "summon") upper.setTint(0x44aa44);
+        c.add(upper);
+        c.setData("upper", upper);
+        c.setData("lower", lower);
         const label = this.add.text(0, -13, u.name, { fontSize: "8px", color: "#fff", fontFamily: "monospace" }).setOrigin(0.5);
         c.add(label);
         if (u.side === "hero") {
@@ -190,11 +194,15 @@ export class BattleScene extends Phaser.Scene {
         this.hpBars.set(u.id, hb);
       }
       c.setPosition(u.x, u.y);
-      const spr = c.list[0] as Phaser.GameObjects.Image;
-      if (spr) {
-        const base = (spr.getData("base") as string) || (u.side === "enemy" ? "soldier" : (u.side === "hero" && this.sim.state.generalId === "vanguard" ? "vanguard" : "hero"));
-        spr.setData("base", base);
-        spr.setTexture(`${base}_${this.dirFromFacing(u.facing)}`);
+      const upper = c.getData("upper") as Phaser.GameObjects.Image;
+      const lower = c.getData("lower") as Phaser.GameObjects.Image;
+      if (upper && lower) {
+        const base = (upper.getData("base") as string) || (u.side === "enemy" ? "soldier" : (u.side === "hero" && this.sim.state.generalId === "vanguard" ? "vanguard" : "hero"));
+        upper.setData("base", base);
+        lower.setData("base", base);
+        const dir = this.dirFromFacing(u.facing);
+        upper.setTexture(`${base}_${dir}`, "upper");
+        lower.setTexture(`${base}_${dir}`, "lower");
       }
       const hb = this.hpBars.get(u.id)!;
       hb.clear();
