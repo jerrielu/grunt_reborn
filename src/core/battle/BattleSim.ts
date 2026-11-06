@@ -381,9 +381,15 @@ export class BattleSim {
      }
      const lateral = Math.abs(desiredX - r.x);
      const turning = lateral > 10;
-     const speedMul = turning ? 0.55 : 1.25;
-     r.y -= r.speed * speedMul * dt;
-     r.x += (desiredX - r.x) * Math.min(1, dt * 6);
+     const speedMul = turning ? 0.6 : 1.35;
+     // inertia: velocities lag behind desired movement
+     const targetVx = (desiredX - r.x) * 6;
+     r.vx += (targetVx - r.vx) * Math.min(1, dt * 5);
+     r.vx *= 0.92;
+     const targetVy = -r.speed * speedMul;
+     r.vy += (targetVy - r.vy) * Math.min(1, dt * 4);
+     r.x += r.vx * dt;
+     r.y += r.vy * dt;
      r.x = clamp(r.x, WALL, ARENA.w - WALL);
 
       // collision -> crash + explosion

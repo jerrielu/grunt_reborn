@@ -64,6 +64,8 @@ export interface RiderUnit {
   explodeRadius: number;
   explodeDamage: number;
   spawnAt: number; // roundTime at which this rider appears
+  vx: number; // horizontal velocity (inertia)
+  vy: number; // vertical velocity (inertia)
 }
 
 export type BuffKind = "tactic" | "equipment" | "instant";

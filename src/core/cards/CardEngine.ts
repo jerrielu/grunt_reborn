@@ -154,7 +154,7 @@ function applyInstant(state: RunState, cardId: string, rng: { int: (a: number, b
           x,
           baseX: x,
           y: 335 - 10,
-          speed: 260,
+          speed: 360,
           damage: 18,
           radius: 10,
           alive: true,
@@ -163,6 +163,8 @@ function applyInstant(state: RunState, cardId: string, rng: { int: (a: number, b
           explodeRadius: 46,
           explodeDamage: 28,
           spawnAt: state.roundTime + b.offset,
+          vx: 0,
+          vy: -360,
         });
       }
     }

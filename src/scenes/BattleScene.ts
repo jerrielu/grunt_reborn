@@ -8,6 +8,7 @@ export class BattleScene extends Phaser.Scene {
   unitSprites: Map<number, Phaser.GameObjects.Container> = new Map();
   riderSprites: Map<number, Phaser.GameObjects.Container> = new Map();
   crashFlyers: { c: Phaser.GameObjects.Container; vx: number; vy: number }[] = [];
+  freezeTimer: number = 0;
   heroShadow!: Phaser.GameObjects.Ellipse;
   arenaGfx!: Phaser.GameObjects.Graphics;
   hpBars: Map<number, Phaser.GameObjects.Graphics> = new Map();
@@ -126,6 +127,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   playRiderCrash(x: number, y: number): void {
+    this.freezeTimer = 0.12;
     // spectacular crash: tumbling scooter + explosion
     const flash = this.add.circle(x, y, 8, 0xff6600, 0.9);
     this.tweens.add({ targets: flash, radius: 60, alpha: 0, duration: 420, ease: "Cubic.easeOut", onComplete: () => flash.destroy() });
@@ -220,7 +222,9 @@ export class BattleScene extends Phaser.Scene {
   update(_time: number, delta: number): void {
     const dt = delta / 1000;
     const sim = this.sim;
-    if (sim.state.phase === "fight") {
+    if (this.freezeTimer > 0) {
+      this.freezeTimer = Math.max(0, this.freezeTimer - dt);
+    } else if (sim.state.phase === "fight") {
       sim.update(dt);
     }
     this.syncUnits();
