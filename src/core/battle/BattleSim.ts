@@ -361,6 +361,7 @@ export class BattleSim {
     const s = this.state;
     for (const r of s.riders) {
       if (!r.alive) continue;
+      if (r.spawnAt > s.roundTime) continue;
       r.y -= r.speed * dt;
       // snake weave to dodge enemies
       const weave = Math.sin((335 - r.y) * 0.07 + r.id * 1.1) * 16;

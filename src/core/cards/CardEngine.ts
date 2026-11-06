@@ -138,23 +138,33 @@ function applyInstant(state: RunState, cardId: string, rng: { int: (a: number, b
     emit("instant.roar", {});
   } else if (cardId === "shenzhenLight") {
     const count = 6;
-    const spacing = 180 / (count + 1);
-    for (let i = 0; i < count; i++) {
-      const id = state.nextUnitId++;
-       state.riders.push({
-        id,
-        x: spacing * (i + 1),
-        baseX: spacing * (i + 1),
-        y: 335 - 10,
-        speed: 260,
-        damage: 18,
-        radius: 10,
-        alive: true,
-        hitIds: [],
-        crashed: false,
-        explodeRadius: 46,
-        explodeDamage: 28,
-      });
+    // spawn in small batches from left and right sides, staggered, not neatly
+    const batches: { side: "left" | "right"; offset: number; n: number }[] = [
+      { side: "left", offset: 0, n: 2 },
+      { side: "right", offset: 0.18, n: 2 },
+      { side: "left", offset: 0.36, n: 1 },
+      { side: "right", offset: 0.54, n: 1 },
+    ];
+    for (const b of batches) {
+      for (let i = 0; i < b.n; i++) {
+        const id = state.nextUnitId++;
+        const x = b.side === "left" ? rng.int(12, 58) : rng.int(122, 168);
+        state.riders.push({
+          id,
+          x,
+          baseX: x,
+          y: 335 - 10,
+          speed: 260,
+          damage: 18,
+          radius: 10,
+          alive: true,
+          hitIds: [],
+          crashed: false,
+          explodeRadius: 46,
+          explodeDamage: 28,
+          spawnAt: state.roundTime + b.offset,
+        });
+      }
     }
     emit("instant.shenzhenLight", { count });
   }

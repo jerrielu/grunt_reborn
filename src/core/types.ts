@@ -63,6 +63,7 @@ export interface RiderUnit {
   crashed: boolean;
   explodeRadius: number;
   explodeDamage: number;
+  spawnAt: number; // roundTime at which this rider appears
 }
 
 export type BuffKind = "tactic" | "equipment" | "instant";
