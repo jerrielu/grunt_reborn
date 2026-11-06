@@ -58,6 +58,7 @@ export class BattleScene extends Phaser.Scene {
       if (tc) this.playHit(tc);
     });
     this.sim.events.on("instant.shenzhenLight", () => this.playShenzhenLightEffect());
+    this.sim.events.on("rider.crash", (e) => this.playRiderCrash(e.data.x as number, e.data.y as number));
   }
 
   findUnit(id: number): Unit | undefined {
@@ -121,6 +122,34 @@ export class BattleScene extends Phaser.Scene {
         });
       }
     }
+  }
+
+  playRiderCrash(x: number, y: number): void {
+    // spectacular crash: tumbling scooter + explosion
+    const flash = this.add.circle(x, y, 8, 0xff6600, 0.9);
+    this.tweens.add({ targets: flash, radius: 60, alpha: 0, duration: 420, ease: "Cubic.easeOut", onComplete: () => flash.destroy() });
+    const ring = this.add.graphics();
+    ring.lineStyle(3, 0xffaa00, 1);
+    ring.strokeCircle(x, y, 6);
+    this.tweens.add({ targets: ring, alpha: 0, scaleX: 4, scaleY: 4, duration: 360, onComplete: () => ring.destroy() });
+    // debris particles
+    for (let k = 0; k < 18; k++) {
+      const ang = (k / 18) * Math.PI * 2;
+      const sp = this.add.rectangle(x, y, 3, 3, k % 2 === 0 ? 0xffff66 : 0xff4400);
+      this.tweens.add({
+        targets: sp,
+        x: x + Math.cos(ang) * (30 + Math.random() * 25),
+        y: y + Math.sin(ang) * (30 + Math.random() * 25),
+        alpha: 0,
+        angle: Math.random() * 360,
+        duration: 420 + Math.random() * 200,
+        onComplete: () => sp.destroy(),
+      });
+    }
+    // tumbling scooter silhouette
+    const debris = this.add.rectangle(x, y, 18, 7, 0x50505a);
+    this.tweens.add({ targets: debris, angle: 720, x: x + 20, y: y + 10, alpha: 0, duration: 500, onComplete: () => debris.destroy() });
+    this.cameras.main.shake(120, 0.008);
   }
 
   playAttack(c: Phaser.GameObjects.Container, tx: number, ty: number): void {

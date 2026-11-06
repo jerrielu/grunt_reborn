@@ -75,6 +75,11 @@ export function formatSimEvent(e: GameEvent): string | null {
       return "主角怒吼，本回合伤害提升 50%！";
     case "instant.shenzhenLight":
       return "深圳之光！黄色电动车骑士从后方冲撞敌军！";
+    case "rider.crash": {
+      const dmg = d.dmg;
+      if (d.killed) return `电动车骑士翻车爆炸，击毙一名敌人！（${dmg} 点伤害）`;
+      return `电动车骑士翻车爆炸造成 ${dmg} 点伤害`;
+    }
     case "rider.hit": {
       const dmg = d.dmg;
       if (d.killed) return `电动车骑士冲撞，击毙一名敌人！（${dmg} 点伤害）`;

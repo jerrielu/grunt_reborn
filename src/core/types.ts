@@ -54,11 +54,15 @@ export interface RiderUnit {
   id: number;
   x: number;
   y: number;
+  baseX: number;
   speed: number;
   damage: number;
   radius: number;
   alive: boolean;
   hitIds: number[];
+  crashed: boolean;
+  explodeRadius: number;
+  explodeDamage: number;
 }
 
 export type BuffKind = "tactic" | "equipment" | "instant";

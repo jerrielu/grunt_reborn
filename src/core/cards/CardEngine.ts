@@ -141,15 +141,19 @@ function applyInstant(state: RunState, cardId: string, rng: { int: (a: number, b
     const spacing = 180 / (count + 1);
     for (let i = 0; i < count; i++) {
       const id = state.nextUnitId++;
-      state.riders.push({
+       state.riders.push({
         id,
         x: spacing * (i + 1),
+        baseX: spacing * (i + 1),
         y: 335 - 10,
         speed: 260,
         damage: 18,
         radius: 10,
         alive: true,
         hitIds: [],
+        crashed: false,
+        explodeRadius: 46,
+        explodeDamage: 28,
       });
     }
     emit("instant.shenzhenLight", { count });

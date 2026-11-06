@@ -362,15 +362,41 @@ export class BattleSim {
     for (const r of s.riders) {
       if (!r.alive) continue;
       r.y -= r.speed * dt;
+      // snake weave to dodge enemies
+      const weave = Math.sin((335 - r.y) * 0.07 + r.id * 1.1) * 16;
+      let desiredX = r.baseX + weave;
       for (const e of s.enemies) {
         if (!e.alive) continue;
-        if (r.hitIds.includes(e.id)) continue;
-        if (Math.hypot(e.x - r.x, e.y - r.y) <= r.radius + e.radius) {
-          r.hitIds.push(e.id);
-          const res = applyDamage(e, r.damage, 1);
-          this.emit("rider.hit", { riderId: r.id, targetId: e.id, dmg: r.damage, killed: res.killed });
-          if (res.killed && e.side === "enemy") this.onEnemyKilled(e as EnemyUnit);
+        const dx = e.x - r.x;
+        const dy = e.y - r.y;
+        if (dy < 0 && dy > -75 && Math.abs(dx) < 28) {
+          desiredX += dx >= 0 ? -22 : 22;
         }
+      }
+      r.x += (desiredX - r.x) * Math.min(1, dt * 7);
+      r.x = clamp(r.x, WALL, ARENA.w - WALL);
+
+      // collision -> crash + explosion
+      let hit = false;
+      for (const e of s.enemies) {
+        if (!e.alive) continue;
+        if (Math.hypot(e.x - r.x, e.y - r.y) <= r.radius + e.radius) { hit = true; break; }
+      }
+      if (hit) {
+        const cx = r.x; const cy = r.y;
+        const boomR = r.explodeRadius;
+        const boomDmg = r.explodeDamage;
+        for (const e of s.enemies) {
+          if (!e.alive) continue;
+          if (Math.hypot(e.x - cx, e.y - cy) <= boomR) {
+            const res = applyDamage(e, boomDmg, 1);
+            this.emit("rider.crash", { riderId: r.id, x: cx, y: cy, targetId: e.id, dmg: boomDmg, killed: res.killed });
+            if (res.killed && e.side === "enemy") this.onEnemyKilled(e as EnemyUnit);
+          }
+        }
+        r.alive = false;
+        r.crashed = true;
+        continue;
       }
       if (r.y < -20) r.alive = false;
     }
