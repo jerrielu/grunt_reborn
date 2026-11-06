@@ -1,6 +1,7 @@
 import { SpriteTemplate } from "./sprite_template";
 import { CardFrame, CardIcon } from "./components/cardFrame";
 import { MenSpriteTemplate } from "./men";
+import { ScooterRiderTemplate } from "./scooterRider";
 import { getCard } from "../config/cards";
 import type { Color } from "./components/base";
 
@@ -32,9 +33,10 @@ export class CardSpriteTemplate extends SpriteTemplate {
     const rects = ICONS[cardId] ?? [[20, 22, 8, 8]];
     const stars = type === "instant" ? 2 : type === "summon" ? 4 : 3;
     const isSummon = type === "summon";
+    const hasArt = isSummon || cardId === "shenzhenLight";
     const frame = new CardFrame(64, 96, accent, stars);
     const components: any[] = [frame];
-    if (!isSummon) {
+    if (!hasArt) {
       const icon = new CardIcon(rects, iconColor);
       components.push(icon);
     }
@@ -66,6 +68,11 @@ export function renderCardCanvas(cardId: string, scale: number = 1): HTMLCanvasE
     const stpl = new MenSpriteTemplate();
     const sc = stpl.renderToCanvas();
     ctx.drawImage(sc, 6 * s, 16 * s, 52 * s, 34 * s);
+  }
+  if (def.id === "shenzhenLight") {
+    const rtpl = new ScooterRiderTemplate();
+    const rc = rtpl.renderToCanvas();
+    ctx.drawImage(rc, 6 * s, 16 * s, 52 * s, 34 * s);
   }
   ctx.fillStyle = "#1a1a1a";
   ctx.font = `bold ${9 * s}px monospace`;

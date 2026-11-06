@@ -57,6 +57,7 @@ export class BattleScene extends Phaser.Scene {
       const tc = tgt ? this.unitSprites.get(tgt.id) : undefined;
       if (tc) this.playHit(tc);
     });
+    this.sim.events.on("instant.shenzhenLight", () => this.playShenzhenLightEffect());
   }
 
   findUnit(id: number): Unit | undefined {
@@ -69,6 +70,57 @@ export class BattleScene extends Phaser.Scene {
     const t = this.add.text(x, y - 10, text, { color, fontSize: "12px", fontStyle: "bold" });
     t.setOrigin(0.5);
     this.tweens.add({ targets: t, y: y - 40, alpha: 0, duration: 600, onComplete: () => t.destroy() });
+  }
+
+  playShenzhenLightEffect(): void {
+    const flash = this.add.rectangle(90, 167, 180, 335, 0xffffaa, 0.45);
+    this.tweens.add({ targets: flash, alpha: 0, duration: 320, onComplete: () => flash.destroy() });
+
+    const riders = this.sim.state.riders ?? [];
+    for (const r of riders) {
+      const g = this.add.graphics();
+      g.setAlpha(1);
+      // main lightning bolt
+      g.lineStyle(2, 0xffff66, 1);
+      g.beginPath();
+      let x = r.x;
+      let y = 0;
+      g.moveTo(x, y);
+      const steps = 14;
+      for (let i = 1; i <= steps; i++) {
+        const t = i / steps;
+        x = r.x + (Math.random() - 0.5) * 22;
+        y = r.y * t;
+        g.lineTo(x, y);
+      }
+      g.strokePath();
+      // branches
+      for (let b = 0; b < 3; b++) {
+        const by = r.y * (0.2 + Math.random() * 0.6);
+        const bx = r.x + (Math.random() - 0.5) * 16;
+        g.lineStyle(1, 0xaaeeff, 0.8);
+        g.beginPath();
+        g.moveTo(bx, by);
+        g.lineTo(bx + (Math.random() - 0.5) * 24, by + 10 + Math.random() * 20);
+        g.strokePath();
+      }
+      this.tweens.add({ targets: g, alpha: 0, duration: 420, delay: 80, onComplete: () => g.destroy() });
+
+      // sparks
+      for (let k = 0; k < 10; k++) {
+        const sx = r.x + (Math.random() - 0.5) * 26;
+        const sy = Math.random() * r.y;
+        const spark = this.add.rectangle(sx, sy, 2, 2, 0xffffff);
+        this.tweens.add({
+          targets: spark,
+          y: sy + 15 + Math.random() * 25,
+          x: sx + (Math.random() - 0.5) * 12,
+          alpha: 0,
+          duration: 300 + Math.random() * 200,
+          onComplete: () => spark.destroy(),
+        });
+      }
+    }
   }
 
   playAttack(c: Phaser.GameObjects.Container, tx: number, ty: number): void {
@@ -131,6 +183,13 @@ export class BattleScene extends Phaser.Scene {
     }
     this.syncUnits();
     this.syncRiders();
+    for (const r of this.sim.state.riders ?? []) {
+      if (Math.random() < 0.25) {
+        const spark = this.add.rectangle(r.x + (Math.random() - 0.5) * 14, r.y + (Math.random() - 0.5) * 10, 2, 2, 0xffff66);
+        spark.setAlpha(0.9);
+        this.tweens.add({ targets: spark, alpha: 0, y: spark.y - 8 - Math.random() * 8, duration: 180, onComplete: () => spark.destroy() });
+      }
+    }
     const t = _time / 1000;
     for (const [id, c] of this.unitSprites) {
       const upper = c.getData("upper") as Phaser.GameObjects.Image | undefined;
@@ -225,12 +284,40 @@ export class BattleScene extends Phaser.Scene {
      let c = this.riderSprites.get(r.id);
      if (!c) {
        c = this.add.container(r.x, r.y);
-       const body = this.add.rectangle(0, 0, 10, 6, 0xffcc00);
-       const helmet = this.add.ellipse(0, -6, 12, 10, 0xffcc00);
-       const earL = this.add.ellipse(-4, -11, 3, 6, 0xffffff);
-       const earR = this.add.ellipse(4, -11, 3, 6, 0xffffff);
-       const bag = this.add.rectangle(6, 2, 6, 6, 0xffffff);
-       c.add([body, helmet, earL, earR, bag]);
+       // ground shadow
+       const shadow = this.add.ellipse(0, 16, 26, 7, 0x000000, 0.35);
+       c.add(shadow);
+       // rear wheel
+       const wheel = this.add.rectangle(0, 10, 18, 7, 0x1e1e23);
+       const wheelHi = this.add.rectangle(0, 7, 18, 2, 0x9696a0);
+       // frame/body
+       const frame = this.add.rectangle(0, 4, 14, 7, 0x50505a);
+       const frameHi = this.add.rectangle(0, 1, 14, 2, 0x9696a0);
+       const frameShade = this.add.rectangle(0, 7, 14, 2, 0x1e1e23);
+       // seat
+       const seat = this.add.rectangle(0, 4, 12, 3, 0x1e1e23);
+       // handlebars
+       const handleL = this.add.rectangle(-7, 2, 4, 2, 0x9696a0);
+       const handleR = this.add.rectangle(7, 2, 4, 2, 0x9696a0);
+       // rider body
+       const body = this.add.rectangle(0, -2, 10, 6, 0xffcc00);
+       const bodyShade = this.add.rectangle(0, 0, 10, 2, 0xc8a000);
+       // bag
+       const bag = this.add.rectangle(6, -1, 5, 5, 0xffffff);
+       const bagShade = this.add.rectangle(6, 1, 5, 1, 0xdcdcdc);
+       // helmet
+       const helmet = this.add.ellipse(0, -8, 12, 9, 0xffcc00);
+       const helmetHi = this.add.rectangle(0, -11, 12, 2, 0xffe650);
+       const helmetShade = this.add.rectangle(0, -5, 12, 2, 0xc8a000);
+       // ears/antennae
+       const earL = this.add.rectangle(-4, -12, 2, 5, 0xffffff);
+       const earR = this.add.rectangle(4, -12, 2, 5, 0xffffff);
+       // top lamp on head (chases)
+       const lampGlow = this.add.rectangle(0, -14, 6, 2, 0xc8f0ff, 0.7);
+       const lamp = this.add.rectangle(0, -14, 4, 2, 0x78dcff);
+       c.add([wheel, wheelHi, frame, frameHi, frameShade, seat, handleL, handleR, body, bodyShade, bag, bagShade, helmet, helmetHi, helmetShade, earL, earR, lampGlow, lamp]);
+       // pulsing lamp chase effect
+       this.tweens.add({ targets: [lamp, lampGlow], alpha: { from: 1, to: 0.4 }, duration: 300, yoyo: true, repeat: -1 });
        this.riderSprites.set(r.id, c);
      }
      c.setPosition(r.x, r.y);
