@@ -106,6 +106,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
       float.remove();
       (source as any)._playing = false;
       sim.playCard(cardId);
+      if (sim.state.phase === "decide") sim.endDecide();
     };
     const startBlast = () => {
       console.log("[cardplay] startBlast", cardId);
