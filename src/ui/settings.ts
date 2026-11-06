@@ -1,6 +1,7 @@
 import { GameController } from "../game";
 import { createRunState, BattleSim } from "../core/battle/BattleSim";
 import { getCard } from "../config/cards";
+import { forceUpdatePWA } from "../pwa";
 import { mountScreen } from "./screen";
 import type { GameEvent } from "../core/types";
 import { formatSimEvents } from "../core/simLog";
@@ -85,6 +86,18 @@ export function openSettings(controller: GameController): void {
   runBtn.style.fontSize = "12px";
   runBtn.style.padding = "6px 12px";
   body.appendChild(runBtn);
+
+  const updateBtn = mkPlaque("强制更新 PWA", () => {
+    updateBtn.disabled = true;
+    updateBtn.textContent = "更新中...";
+    forceUpdatePWA();
+  });
+  updateBtn.style.background = "#8b6914";
+  updateBtn.style.color = "#fff3d0";
+  updateBtn.style.fontWeight = "bold";
+  updateBtn.style.fontSize = "12px";
+  updateBtn.style.padding = "6px 12px";
+  body.appendChild(updateBtn);
 
   const log = document.createElement("div");
   log.style.cssText = "flex:1;min-height:0;overflow:auto;background:#0a0604;color:#c9a86a;font-size:9px;line-height:1.3;white-space:pre-wrap;word-break:break-all;padding:6px;border:1px solid #3a2410;";

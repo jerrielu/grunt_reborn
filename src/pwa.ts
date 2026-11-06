@@ -48,3 +48,39 @@ export function setUpdateHandler(handler: (() => void) | null): void {
 export function applyUpdate(): void {
   registration?.waiting?.postMessage("SKIP_WAITING");
 }
+
+export async function forceUpdatePWA(): Promise<void> {
+  try {
+    if ("serviceWorker" in navigator) {
+      const reg = registration ?? (await navigator.serviceWorker.getRegistration().catch(() => undefined));
+      if (reg) {
+        await reg.update().catch(() => undefined);
+        if (reg.waiting) {
+          reg.waiting.postMessage("SKIP_WAITING");
+          return;
+        }
+        if (reg.installing) {
+          const worker = reg.installing;
+          await new Promise<void>((resolve) => {
+            const timer = setTimeout(resolve, 5000);
+            worker.addEventListener("statechange", () => {
+              if (worker.state === "installed" && reg.waiting) {
+                clearTimeout(timer);
+                reg.waiting.postMessage("SKIP_WAITING");
+                resolve();
+              }
+            });
+          });
+          return;
+        }
+      }
+    }
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    }
+  } catch {
+    // ignore
+  }
+  window.location.reload();
+}
