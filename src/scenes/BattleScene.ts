@@ -279,7 +279,14 @@ export class BattleScene extends Phaser.Scene {
     const s = this.sim.state;
     const all: Unit[] = [s.hero, ...s.enemies, ...s.summons].filter((u) => u.alive);
     for (const [id, c] of this.unitSprites) {
-      if (!all.find((u) => u.id === id)) { c.destroy(); this.unitSprites.delete(id); this.hpBars.get(id)?.destroy(); this.hpBars.delete(id); }
+      if (!all.find((u) => u.id === id)) {
+        this.tweens.killTweensOf(c);
+        c.list.forEach((ch: any) => this.tweens.killTweensOf(ch));
+        c.destroy();
+        this.unitSprites.delete(id);
+        this.hpBars.get(id)?.destroy();
+        this.hpBars.delete(id);
+      }
     }
     for (const u of all) {
       let c = this.unitSprites.get(u.id);
@@ -339,7 +346,12 @@ export class BattleScene extends Phaser.Scene {
    const riders = this.sim.state.riders ?? [];
    const ids = new Set(riders.map((r: any) => r.id));
    for (const [id, c] of this.riderSprites) {
-     if (!ids.has(id)) { c.destroy(); this.riderSprites.delete(id); }
+     if (!ids.has(id)) {
+       this.tweens.killTweensOf(c);
+       c.list.forEach((ch: any) => this.tweens.killTweensOf(ch));
+       c.destroy();
+       this.riderSprites.delete(id);
+     }
    }
    const roundTime = this.sim.state.roundTime;
    for (const r of riders) {
