@@ -362,20 +362,29 @@ export class BattleSim {
     for (const r of s.riders) {
       if (!r.alive) continue;
       if (r.spawnAt > s.roundTime) continue;
-      r.y -= r.speed * dt;
-      // snake weave to dodge enemies
-      const weave = Math.sin((335 - r.y) * 0.07 + r.id * 1.1) * 16;
-      let desiredX = r.baseX + weave;
-      for (const e of s.enemies) {
-        if (!e.alive) continue;
-        const dx = e.x - r.x;
-        const dy = e.y - r.y;
-        if (dy < 0 && dy > -75 && Math.abs(dx) < 28) {
-          desiredX += dx >= 0 ? -22 : 22;
-        }
-      }
-      r.x += (desiredX - r.x) * Math.min(1, dt * 7);
-      r.x = clamp(r.x, WALL, ARENA.w - WALL);
+      // lateral weave: segments of varying length/direction, bigger amplitude
+     const traveled = 335 - r.y;
+     const segLen = 50 + (r.id % 3) * 18;
+     const seg = Math.floor(traveled / segLen);
+     const dir = ((r.id * 7 + seg * 13) % 2 === 0) ? 1 : -1;
+     const amp = 30 + ((r.id + seg) % 4) * 14; // ~2-4 tiles
+     const segOffset = dir * amp;
+     const weave = Math.sin(traveled * 0.05 + r.id * 1.1) * (amp * 0.35);
+     let desiredX = r.baseX + segOffset + weave;
+     for (const e of s.enemies) {
+       if (!e.alive) continue;
+       const dx = e.x - r.x;
+       const dy = e.y - r.y;
+       if (dy < 0 && dy > -75 && Math.abs(dx) < 28) {
+         desiredX += dx >= 0 ? -24 : 24;
+       }
+     }
+     const lateral = Math.abs(desiredX - r.x);
+     const turning = lateral > 10;
+     const speedMul = turning ? 0.55 : 1.25;
+     r.y -= r.speed * speedMul * dt;
+     r.x += (desiredX - r.x) * Math.min(1, dt * 6);
+     r.x = clamp(r.x, WALL, ARENA.w - WALL);
 
       // collision -> crash + explosion
       let hit = false;

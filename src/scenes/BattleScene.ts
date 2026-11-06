@@ -108,7 +108,7 @@ export class BattleScene extends Phaser.Scene {
       this.tweens.add({ targets: g, alpha: 0, duration: 420, delay: 80, onComplete: () => g.destroy() });
 
       // sparks
-      for (let k = 0; k < 10; k++) {
+      for (let k = 0; k < 4; k++) {
         const sx = r.x + (Math.random() - 0.5) * 26;
         const sy = Math.random() * r.y;
         const spark = this.add.rectangle(sx, sy, 2, 2, 0xffffff);
@@ -213,7 +213,7 @@ export class BattleScene extends Phaser.Scene {
     this.syncUnits();
     this.syncRiders();
     for (const r of this.sim.state.riders ?? []) {
-      if (Math.random() < 0.25) {
+      if (Math.random() < 0.08) {
         const spark = this.add.rectangle(r.x + (Math.random() - 0.5) * 14, r.y + (Math.random() - 0.5) * 10, 2, 2, 0xffff66);
         spark.setAlpha(0.9);
         this.tweens.add({ targets: spark, alpha: 0, y: spark.y - 8 - Math.random() * 8, duration: 180, onComplete: () => spark.destroy() });
@@ -318,35 +318,41 @@ export class BattleScene extends Phaser.Scene {
        // ground shadow
        const shadow = this.add.ellipse(0, 16, 26, 7, 0x000000, 0.35);
        c.add(shadow);
-       // rear wheel
-       const wheel = this.add.rectangle(0, 10, 18, 7, 0x1e1e23);
-       const wheelHi = this.add.rectangle(0, 7, 18, 2, 0x9696a0);
-       // frame/body
-       const frame = this.add.rectangle(0, 4, 14, 7, 0x50505a);
-       const frameHi = this.add.rectangle(0, 1, 14, 2, 0x9696a0);
-       const frameShade = this.add.rectangle(0, 7, 14, 2, 0x1e1e23);
+       // rear wheel (bottom)
+       const rearWheel = this.add.rectangle(0, 12, 16, 6, 0x1e1e23);
+       const rearWheelHi = this.add.rectangle(0, 9, 16, 2, 0x9696a0);
+       // front wheel (top)
+       const frontWheel = this.add.rectangle(0, -10, 14, 6, 0x1e1e23);
+       const frontWheelHi = this.add.rectangle(0, -13, 14, 2, 0x9696a0);
+       // frame (vertical)
+       const frame = this.add.rectangle(0, 2, 8, 20, 0x50505a);
+       const frameHi = this.add.rectangle(-2, 2, 2, 20, 0x9696a0);
+       const frameShade = this.add.rectangle(2, 2, 2, 20, 0x1e1e23);
        // seat
-       const seat = this.add.rectangle(0, 4, 12, 3, 0x1e1e23);
-       // handlebars
-       const handleL = this.add.rectangle(-7, 2, 4, 2, 0x9696a0);
-       const handleR = this.add.rectangle(7, 2, 4, 2, 0x9696a0);
-       // rider body
-       const body = this.add.rectangle(0, -2, 10, 6, 0xffcc00);
-       const bodyShade = this.add.rectangle(0, 0, 10, 2, 0xc8a000);
+       const seat = this.add.rectangle(0, 4, 10, 3, 0x1e1e23);
+       // handlebars (top)
+       const handleL = this.add.rectangle(-6, -8, 6, 2, 0x9696a0);
+       const handleR = this.add.rectangle(6, -8, 6, 2, 0x9696a0);
+       // rider legs
+       const legL = this.add.rectangle(-3, 6, 3, 8, 0xc8a000);
+       const legR = this.add.rectangle(3, 6, 3, 8, 0xc8a000);
+       // rider body (sitting)
+       const body = this.add.rectangle(0, -1, 10, 8, 0xffcc00);
+       const bodyShade = this.add.rectangle(0, 2, 10, 2, 0xc8a000);
        // bag
        const bag = this.add.rectangle(6, -1, 5, 5, 0xffffff);
        const bagShade = this.add.rectangle(6, 1, 5, 1, 0xdcdcdc);
        // helmet
-       const helmet = this.add.ellipse(0, -8, 12, 9, 0xffcc00);
-       const helmetHi = this.add.rectangle(0, -11, 12, 2, 0xffe650);
+       const helmet = this.add.ellipse(0, -9, 12, 10, 0xffcc00);
+       const helmetHi = this.add.rectangle(0, -13, 12, 2, 0xffe650);
        const helmetShade = this.add.rectangle(0, -5, 12, 2, 0xc8a000);
        // ears/antennae
-       const earL = this.add.rectangle(-4, -12, 2, 5, 0xffffff);
-       const earR = this.add.rectangle(4, -12, 2, 5, 0xffffff);
+       const earL = this.add.rectangle(-4, -13, 2, 5, 0xffffff);
+       const earR = this.add.rectangle(4, -13, 2, 5, 0xffffff);
        // top lamp on head (chases)
-       const lampGlow = this.add.rectangle(0, -14, 6, 2, 0xc8f0ff, 0.7);
-       const lamp = this.add.rectangle(0, -14, 4, 2, 0x78dcff);
-       c.add([wheel, wheelHi, frame, frameHi, frameShade, seat, handleL, handleR, body, bodyShade, bag, bagShade, helmet, helmetHi, helmetShade, earL, earR, lampGlow, lamp]);
+       const lampGlow = this.add.rectangle(0, -15, 6, 2, 0xc8f0ff, 0.7);
+       const lamp = this.add.rectangle(0, -15, 4, 2, 0x78dcff);
+       c.add([rearWheel, rearWheelHi, frontWheel, frontWheelHi, frame, frameHi, frameShade, seat, handleL, handleR, legL, legR, body, bodyShade, bag, bagShade, helmet, helmetHi, helmetShade, earL, earR, lampGlow, lamp]);
        // pulsing lamp chase effect
        this.tweens.add({ targets: [lamp, lampGlow], alpha: { from: 1, to: 0.4 }, duration: 300, yoyo: true, repeat: -1 });
        this.riderSprites.set(r.id, c);
