@@ -7,6 +7,7 @@ export class BattleScene extends Phaser.Scene {
   sim!: BattleSim;
   unitSprites: Map<number, Phaser.GameObjects.Container> = new Map();
   riderSprites: Map<number, Phaser.GameObjects.Container> = new Map();
+  crashFlyers: { c: Phaser.GameObjects.Container; vx: number; vy: number }[] = [];
   heroShadow!: Phaser.GameObjects.Ellipse;
   arenaGfx!: Phaser.GameObjects.Graphics;
   hpBars: Map<number, Phaser.GameObjects.Graphics> = new Map();
@@ -150,6 +151,17 @@ export class BattleScene extends Phaser.Scene {
     const debris = this.add.rectangle(x, y, 18, 7, 0x50505a);
     this.tweens.add({ targets: debris, angle: 720, x: x + 20, y: y + 10, alpha: 0, duration: 500, onComplete: () => debris.destroy() });
     this.cameras.main.shake(120, 0.008);
+    // knocked-away motorcycle flies around the battlefield like a ping-pong ball, then exits top
+    const flyer = this.add.container(x, y);
+    const fw = this.add.rectangle(0, 0, 16, 6, 0x1e1e23);
+    const fh = this.add.rectangle(0, -2, 16, 2, 0x9696a0);
+    const fb = this.add.rectangle(0, 2, 10, 8, 0x50505a);
+    const fhl = this.add.ellipse(0, -6, 10, 8, 0xffcc00);
+    flyer.add([fw, fh, fb, fhl]);
+    flyer.setAngle(Math.random() * 360);
+    const vx = (Math.random() < 0.5 ? -1 : 1) * (90 + Math.random() * 60);
+    const vy = -(150 + Math.random() * 80);
+    this.crashFlyers.push({ c: flyer, vx, vy });
   }
 
   playAttack(c: Phaser.GameObjects.Container, tx: number, ty: number): void {
@@ -206,12 +218,28 @@ export class BattleScene extends Phaser.Scene {
   }
 
   update(_time: number, delta: number): void {
+    const dt = delta / 1000;
     const sim = this.sim;
     if (sim.state.phase === "fight") {
-      sim.update(delta / 1000);
+      sim.update(dt);
     }
     this.syncUnits();
     this.syncRiders();
+    // move knocked-away crashed motorcycles bouncing around battlefield, exit top
+    const W = 180, H = 335;
+    for (let i = this.crashFlyers.length - 1; i >= 0; i--) {
+      const f = this.crashFlyers[i];
+      f.c.x += f.vx * dt;
+      f.c.y += f.vy * dt;
+      f.c.angle += 360 * dt;
+      if (f.c.x < 6) { f.c.x = 6; f.vx = Math.abs(f.vx); }
+      if (f.c.x > W - 6) { f.c.x = W - 6; f.vx = -Math.abs(f.vx); }
+      if (f.c.y > H - 6) { f.c.y = H - 6; f.vy = -Math.abs(f.vy); }
+      if (f.c.y < -20) {
+        f.c.destroy();
+        this.crashFlyers.splice(i, 1);
+      }
+    }
     for (const r of this.sim.state.riders ?? []) {
       if (Math.random() < 0.08) {
         const spark = this.add.rectangle(r.x + (Math.random() - 0.5) * 14, r.y + (Math.random() - 0.5) * 10, 2, 2, 0xffff66);
