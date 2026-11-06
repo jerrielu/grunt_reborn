@@ -136,6 +136,23 @@ function applyInstant(state: RunState, cardId: string, rng: { int: (a: number, b
   } else if (cardId === "roar") {
     state.roundBuffs.heroDamageBoost = 1.5;
     emit("instant.roar", {});
+  } else if (cardId === "shenzhenLight") {
+    const count = 6;
+    const spacing = 180 / (count + 1);
+    for (let i = 0; i < count; i++) {
+      const id = state.nextUnitId++;
+      state.riders.push({
+        id,
+        x: spacing * (i + 1),
+        y: 335 - 10,
+        speed: 260,
+        damage: 18,
+        radius: 10,
+        alive: true,
+        hitIds: [],
+      });
+    }
+    emit("instant.shenzhenLight", { count });
   }
 }
 

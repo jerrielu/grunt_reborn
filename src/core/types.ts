@@ -50,6 +50,17 @@ export interface EnemyUnit extends Unit {
   isBoss: boolean;
 }
 
+export interface RiderUnit {
+  id: number;
+  x: number;
+  y: number;
+  speed: number;
+  damage: number;
+  radius: number;
+  alive: boolean;
+  hitIds: number[];
+}
+
 export type BuffKind = "tactic" | "equipment" | "instant";
 
 export interface Buff {
@@ -97,6 +108,7 @@ export interface RunState {
   hero: HeroUnit;
   enemies: EnemyUnit[];
   summons: SummonUnit[];
+  riders: RiderUnit[];
   deck: CardInstance[]; // owned cards (replayable)
   equipment: { weapon: string | null; armor: string | null; boots: string | null };
   buffs: Buff[]; // active tactic buffs

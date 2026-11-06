@@ -6,6 +6,7 @@ import { TileFactory } from "../tiles/TileFactory";
 export class BattleScene extends Phaser.Scene {
   sim!: BattleSim;
   unitSprites: Map<number, Phaser.GameObjects.Container> = new Map();
+  riderSprites: Map<number, Phaser.GameObjects.Container> = new Map();
   heroShadow!: Phaser.GameObjects.Ellipse;
   arenaGfx!: Phaser.GameObjects.Graphics;
   hpBars: Map<number, Phaser.GameObjects.Graphics> = new Map();
@@ -129,6 +130,7 @@ export class BattleScene extends Phaser.Scene {
       sim.update(delta / 1000);
     }
     this.syncUnits();
+    this.syncRiders();
     const t = _time / 1000;
     for (const [id, c] of this.unitSprites) {
       const upper = c.getData("upper") as Phaser.GameObjects.Image | undefined;
@@ -212,4 +214,26 @@ export class BattleScene extends Phaser.Scene {
       hb.fillRect(u.x - 8, u.y - 18, 17 * (u.hp / u.maxHp), 3);
     }
   }
+
+ syncRiders(): void {
+   const riders = this.sim.state.riders ?? [];
+   const ids = new Set(riders.map((r: any) => r.id));
+   for (const [id, c] of this.riderSprites) {
+     if (!ids.has(id)) { c.destroy(); this.riderSprites.delete(id); }
+   }
+   for (const r of riders) {
+     let c = this.riderSprites.get(r.id);
+     if (!c) {
+       c = this.add.container(r.x, r.y);
+       const body = this.add.rectangle(0, 0, 10, 6, 0xffcc00);
+       const helmet = this.add.ellipse(0, -6, 12, 10, 0xffcc00);
+       const earL = this.add.ellipse(-4, -11, 3, 6, 0xffffff);
+       const earR = this.add.ellipse(4, -11, 3, 6, 0xffffff);
+       const bag = this.add.rectangle(6, 2, 6, 6, 0xffffff);
+       c.add([body, helmet, earL, earR, bag]);
+       this.riderSprites.set(r.id, c);
+     }
+     c.setPosition(r.x, r.y);
+   }
+ }
 }

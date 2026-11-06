@@ -22,6 +22,7 @@ export const CARDS: CardDef[] = [
   { id: "summonSpearman", name: "矛手", type: "summon", description: "召唤矛手" },
   { id: "summonShieldman", name: "盾兵", type: "summon", description: "召唤盾兵" },
   { id: "summonRally", name: "集结", type: "summon", description: "召唤两名步卒" },
+  { id: "shenzhenLight", name: "深圳之光", type: "instant", description: "S级：释放后，黄色电动车骑士从后方冲撞敌军" },
 ];
 
 export function getCard(id: string): CardDef | undefined {

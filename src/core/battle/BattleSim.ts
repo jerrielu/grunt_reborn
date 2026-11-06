@@ -1,4 +1,4 @@
-import type { RunState, HeroUnit, EnemyUnit, SummonUnit, Unit } from "../types";
+import type { RunState, HeroUnit, EnemyUnit, SummonUnit, Unit, RiderUnit } from "../types";
 import { EventEmitter } from "../events";
 import { Rng } from "../rng";
 import { applyDamage, heal, knockback, distance, findNearest } from "../combat";
@@ -38,7 +38,7 @@ export function createRunState(seed: number, generalId: string): RunState {
   const deck = starterIds.map((defId, i) => ({ instanceId: 100 + i, defId }));
   const state: RunState = {
     seed, generalId, level: 1, round: 0, phase: "fight", timer: 10, fightSeconds: 10,
-    hero, enemies: [], summons: [],
+    hero, enemies: [], summons: [], riders: [],
     deck, equipment: { weapon: null, armor: null, boots: null },
     buffs: [], roundBuffs: { slowEnemies: 1, heroDamageBoost: 1, heroDamageTakenBoost: 1 },
     kills: 0, elitesKilled: 0, bossesKilled: 0, levelsCleared: 0,
@@ -69,7 +69,7 @@ export class BattleSim {
 
   startLevel(): void {
     const s = this.state;
-    s.enemies = []; s.summons = []; s.spawnQueue = [];
+    s.enemies = []; s.summons = []; s.riders = []; s.spawnQueue = [];
     s.round = s.round + 1;
     s.roundTime = 0;
     s.levelTime = 0;
@@ -130,6 +130,7 @@ export class BattleSim {
     this.tickHero(dt);
     for (const e of s.enemies) if (e.alive) this.tickEnemy(e, dt);
     for (const sm of s.summons) if (sm.alive) this.tickSummon(sm, dt);
+    this.tickRiders(dt);
 
     // knockback decay + apply
     for (const u of this.allUnits()) {
@@ -354,6 +355,26 @@ export class BattleSim {
       this.emit("summon.attack", { attackerId: sm.id, targetId: target.id, dmg: sm.attackDamage, killed: res.killed });
       if (res.killed) this.onEnemyKilled(target);
     }
+  }
+
+  private tickRiders(dt: number): void {
+    const s = this.state;
+    for (const r of s.riders) {
+      if (!r.alive) continue;
+      r.y -= r.speed * dt;
+      for (const e of s.enemies) {
+        if (!e.alive) continue;
+        if (r.hitIds.includes(e.id)) continue;
+        if (Math.hypot(e.x - r.x, e.y - r.y) <= r.radius + e.radius) {
+          r.hitIds.push(e.id);
+          const res = applyDamage(e, r.damage, 1);
+          this.emit("rider.hit", { riderId: r.id, targetId: e.id, dmg: r.damage, killed: res.killed });
+          if (res.killed && e.side === "enemy") this.onEnemyKilled(e as EnemyUnit);
+        }
+      }
+      if (r.y < -20) r.alive = false;
+    }
+    s.riders = s.riders.filter((r) => r.alive);
   }
 
   private separate(): void {

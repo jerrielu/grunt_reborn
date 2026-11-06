@@ -73,6 +73,13 @@ export function formatSimEvent(e: GameEvent): string | null {
       return "主角施放扰乱，敌军移速减半！";
     case "instant.roar":
       return "主角怒吼，本回合伤害提升 50%！";
+    case "instant.shenzhenLight":
+      return "深圳之光！黄色电动车骑士从后方冲撞敌军！";
+    case "rider.hit": {
+      const dmg = d.dmg;
+      if (d.killed) return `电动车骑士冲撞，击毙一名敌人！（${dmg} 点伤害）`;
+      return `电动车骑士冲撞造成 ${dmg} 点伤害`;
+    }
     case "summon.spawn":
       return `召唤出${String(d.name ?? "")}，场上现有 ${d.count} 个召唤物！`;
     default:
