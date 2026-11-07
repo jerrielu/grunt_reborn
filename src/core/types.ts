@@ -116,7 +116,7 @@ export interface CardInstance {
   defId: string;
 }
 
-export type Phase = "fight" | "decide" | "reward" | "over";
+export type Phase = "fight" | "reward" | "over";
 
 export interface RunState {
   seed: number;

@@ -27,19 +27,6 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
   deckArea.style.cssText = "position:relative;flex:0 0 20%;height:100%;display:flex;align-items:flex-end;justify-content:center;padding:4px 6px;box-sizing:border-box;";
   panel.appendChild(deckArea);
 
-  // decision window bar: the fight pauses here until a card is played or skipped
-  const decideBar = document.createElement("div");
-  decideBar.id = "decide-bar";
-  decideBar.style.cssText = "position:absolute;left:0;right:0;bottom:10%;min-height:34px;display:none;align-items:center;justify-content:center;gap:12px;background:rgba(24,16,6,0.94);border-top:1px solid #c9a86a;color:#ffe6a8;font-family:monospace;font-size:11px;z-index:10;padding:4px 8px;box-sizing:border-box;";
-  const decideText = document.createElement("span");
-  decideText.textContent = "战斗结束 — 打出一张牌，或跳过";
-  const decideSkip = document.createElement("button");
-  decideSkip.textContent = "跳过";
-  decideSkip.style.cssText = "background:#8b6914;color:#fff3d0;border:1px solid #0a0604;padding:4px 12px;font-family:monospace;font-size:11px;cursor:pointer;";
-  decideSkip.onclick = () => { decideSkip.disabled = true; sim.skipCard(); };
-  decideBar.append(decideText, decideSkip);
-  root.appendChild(decideBar);
-
   let preview: HTMLElement | null = null;
   let isDragging = false;
   let pendingRender = false;
@@ -121,9 +108,7 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
       (source as any)._playing = false;
       try {
         sim.playCard(cardId);
-      } finally {
-        if (sim.state.phase === "decide") sim.endDecide();
-      }
+      } catch {}
     };
     const startBlast = () => {
       console.log("[cardplay] startBlast", cardId);
@@ -355,11 +340,7 @@ const cards = s.deck;
     if (!deckDrag) return;
     if (e.clientY < deckDrag.startY - 10) deckDrag.moved = true;
   });
-  function updateDecideBar(): void {
-    const inDecide = sim.state.phase === "decide";
-    decideBar.style.display = inDecide ? "flex" : "none";
-    if (inDecide) decideSkip.disabled = false;
-  }
+  function updateDecideBar(): void { /* no-op */ }
 
   const finishDeckDrag = (endY: number, endX: number) => {
     if (!deckDrag) return;

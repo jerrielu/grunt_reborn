@@ -11,18 +11,13 @@ export function runHeadless(seed: number, generalId: string, opts: { maxLevels?:
   const transcript: string[] = [];
   sim.events.onAll((e) => transcript.push(`[${e.type}] t=${e.t.toFixed(2)} ${JSON.stringify(e.data)}`));
 
-  let rounds = 0;
   let levelsDone = 0;
-  while (state.phase !== "over" && levelsDone < maxLevels && rounds < maxRounds) {
+  let guard = 0;
+  while (state.phase !== "over" && levelsDone < maxLevels && guard < 100000) {
+    guard++;
     // fight phase: tick
     if (state.phase === "fight") {
       sim.update(0.1);
-      continue;
-    }
-    if (state.phase === "decide") {
-      if (opts.botPlay) opts.botPlay(sim);
-      else sim.skipCard();
-      rounds++;
       continue;
     }
     if (state.phase === "reward") {
@@ -32,6 +27,7 @@ export function runHeadless(seed: number, generalId: string, opts: { maxLevels?:
       levelsDone++;
       continue;
     }
+    break;
   }
   return { sim, transcript };
 }

@@ -116,18 +116,11 @@ export function openSettings(controller: GameController): void {
     const events: GameEvent[] = [];
     sim.events.onAll((e) => events.push(e));
 
-    let rounds = 0;
     let levelsDone = 0;
     const maxLevels = 2;
-    const maxRounds = 200;
-    while (state.phase !== "over" && levelsDone < maxLevels && rounds < maxRounds) {
+    while (state.phase !== "over" && levelsDone < maxLevels) {
       if (state.phase === "fight") {
         sim.update(0.1);
-        continue;
-      }
-      if (state.phase === "decide") {
-        botPlay(sim);
-        rounds++;
         continue;
       }
       if (state.phase === "reward") {
@@ -139,6 +132,6 @@ export function openSettings(controller: GameController): void {
       break;
     }
     formatSimEvents(events).forEach((l) => appendLine(l));
-    appendLine(`\n模拟结束：关卡=${state.levelsCleared ?? 0} 回合=${rounds}`);
+    appendLine(`\n模拟结束：关卡=${state.levelsCleared ?? 0}`);
   }
 }

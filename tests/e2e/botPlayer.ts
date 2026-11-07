@@ -11,7 +11,6 @@ export function botPlay(sim: BattleSim): void {
     const tacticInst = s.deck.find((c) => getCard(c.defId)?.type === "tactic");
     if (tacticInst) {
       sim.playCard(tacticInst.defId);
-      sim.endDecide();
       return;
     }
   }
@@ -21,7 +20,6 @@ export function botPlay(sim: BattleSim): void {
     const summonInst = s.deck.find((c) => getCard(c.defId)?.type === "summon");
     if (summonInst) {
       sim.playCard(summonInst.defId);
-      sim.endDecide();
       return;
     }
   }
@@ -30,10 +28,9 @@ export function botPlay(sim: BattleSim): void {
     const equipInst = s.deck.find((c) => getCard(c.defId)?.type === "equipment");
     if (equipInst) {
       sim.playCard(equipInst.defId);
-      sim.endDecide();
       return;
     }
   }
   // 5. skip
-  sim.skipCard();
+  // no-op
 }

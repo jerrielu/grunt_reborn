@@ -23,7 +23,7 @@ export interface PlayResult { ok: boolean; reason?: string; }
 export function playCard(state: RunState, cardId: string, rng: { int: (a: number, b: number) => number }, emit: (type: string, data: Record<string, unknown>) => void): PlayResult {
   const def = getCard(cardId);
   if (!def) return { ok: false, reason: "unknown" };
-  if (state.phase !== "fight" && state.phase !== "decide") return { ok: false, reason: "not-fight" };
+  if (state.phase !== "fight") return { ok: false, reason: "not-fight" };
 
   // Tactic
   if (def.type === "tactic") {

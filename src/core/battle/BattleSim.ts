@@ -160,15 +160,6 @@ export class BattleSim {
     if (s.bossSpawned && s.enemies.filter(e => e.alive && e.isBoss).length === 0 && s.enemies.filter(e => e.alive).length === 0) {
       this.levelClear();
     }
-
-    // decide window when fight time expires
-    if (s.phase === "fight" && s.roundTime >= s.fightSeconds) {
-      s.phase = "decide";
-      s.timer = 0;
-      this.emit("phase.changed", { phase: "decide" });
-      // nothing to play and nothing to draw: resume instead of freezing forever
-      if (s.deck.length === 0 && s.drawPile.length === 0) this.endDecide();
-    }
   }
 
   private allUnits(): Unit[] {
@@ -556,9 +547,9 @@ export class BattleSim {
     return res;
   }
 
-  skipCard(): void { this.endDecide(); }
+  skipCard(): void { /* no-op: cards can be played anytime */ }
 
-  endDecide(): void { this.nextRoundStart(); }
+  endDecide(): void { /* no-op */ }
 
   confirmReward(choiceCardId: string): void {
     const s = this.state;
