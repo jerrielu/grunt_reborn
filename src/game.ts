@@ -24,7 +24,7 @@ export class GameController {
     state.hero.maxHp = Math.round(state.hero.maxHp * hpMul);
     state.hero.hp = state.hero.maxHp;
     state.hero.attackDamage = Math.round(state.hero.attackDamage * dmgMul);
-    // build deck from saved deck (or starter) filtered to unlocked
+    // build draw pile from saved deck (or starter) filtered to unlocked; hand starts empty
     const starterMap: Record<string, string[]> = {
       shoucheng: ["omnislash"],
       vanguard: ["omnislash"],
@@ -32,7 +32,8 @@ export class GameController {
     };
     const base = (this.meta.state.deck && this.meta.state.deck.length > 0) ? this.meta.state.deck : (starterMap[generalId] ?? starterMap.shoucheng);
     const ids = base.filter((id) => this.meta.state.unlockedCards.includes(id));
-    state.deck = ids.map((defId, i) => ({ instanceId: 100 + i, defId }));
+    state.deck = [];
+    state.drawPile = ids.length > 0 ? ids : (starterMap[generalId] ?? starterMap.shoucheng);
     const sim = new BattleSim(state);
     this.sim = sim;
     return sim;

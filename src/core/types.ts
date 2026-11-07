@@ -131,7 +131,8 @@ export interface RunState {
   summons: SummonUnit[];
   riders: RiderUnit[];
   flyers: FlyerUnit[];
-  deck: CardInstance[]; // owned cards (replayable)
+  deck: CardInstance[]; // cards currently in hand
+  drawPile: string[]; // card def ids available to draw from (deck builder selection)
   equipment: { weapon: string | null; armor: string | null; boots: string | null };
   buffs: Buff[]; // active tactic buffs
   roundBuffs: { slowEnemies: number; heroDamageBoost: number; heroDamageTakenBoost: number }; // instant round-scoped

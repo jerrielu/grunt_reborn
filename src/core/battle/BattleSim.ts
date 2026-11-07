@@ -35,11 +35,10 @@ export function createRunState(seed: number, generalId: string): RunState {
     summoner: ["omnislash"],
   };
   const starterIds = starterMap[generalId] ?? starterMap.shoucheng;
-  const deck = starterIds.map((defId, i) => ({ instanceId: 100 + i, defId }));
   const state: RunState = {
     seed, generalId, level: 1, round: 0, phase: "fight", timer: 10, fightSeconds: 10,
     hero, enemies: [], summons: [], riders: [], flyers: [],
-    deck, equipment: { weapon: null, armor: null, boots: null },
+    deck: [], drawPile: [...starterIds], equipment: { weapon: null, armor: null, boots: null },
     buffs: [], roundBuffs: { slowEnemies: 1, heroDamageBoost: 1, heroDamageTakenBoost: 1 },
     kills: 0, elitesKilled: 0, bossesKilled: 0, levelsCleared: 0,
     nextUnitId: 2, spawnQueue: [], roundTime: 0, levelTime: 0, nextDrawAt: 0, waveIndex: 0, wavesTotal,
@@ -533,7 +532,7 @@ export class BattleSim {
   // Public helpers for external control
   drawCard(): void {
     const s = this.state;
-    const pool = CARDS.map((c) => c.id);
+    const pool = s.drawPile && s.drawPile.length > 0 ? s.drawPile : CARDS.map((c) => c.id);
     const id = pool[this.rng.int(0, pool.length - 1)];
     const inst = { instanceId: s.nextUnitId++, defId: id };
     s.deck.push(inst);
