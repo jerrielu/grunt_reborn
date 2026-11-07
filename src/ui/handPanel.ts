@@ -269,10 +269,20 @@ const cards = s.deck;
     });
 
     deckArea.innerHTML = "";
-    // deck stack visual
+    const remaining = (sim.state.drawPile && sim.state.drawPile.length) || 0;
+    deckArea.style.pointerEvents = remaining > 0 ? "auto" : "none";
+
+    if (remaining <= 0) {
+      cooldownSweep = null;
+      particleLayerRef = null;
+      return;
+    }
+
+    // deck stack visual: thickness reflects remaining card count
+    const layers = Math.min(remaining, 8);
     const stack = document.createElement("div");
     stack.style.cssText = "position:relative;width:62px;height:94px;margin-bottom:4px;";
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < layers; i++) {
       const c = document.createElement("div");
       c.style.cssText = `position:absolute;left:${i * 2}px;top:${i * 2}px;width:62px;height:94px;background:#222;border:1px solid #555;image-rendering:pixelated;`;
       stack.appendChild(c);
@@ -335,9 +345,11 @@ const cards = s.deck;
     const dy = endY - dd.startY;
     console.log("[carddraw] drag end", "dy=", dy, "moved=", dd.moved);
     if (dy < -40) {
-      const rootRect = root.getBoundingClientRect();
-      manualDrawTarget = { left: endX - rootRect.left - 31, top: endY - rootRect.top - 47 };
-      sim.drawCard();
+      if (sim.state.drawPile && sim.state.drawPile.length > 0) {
+        const rootRect = root.getBoundingClientRect();
+        manualDrawTarget = { left: endX - rootRect.left - 31, top: endY - rootRect.top - 47 };
+        sim.drawCard();
+      }
     }
   };
   deckArea.addEventListener("pointerup", (e) => { finishDeckDrag(e.clientY, e.clientX); });

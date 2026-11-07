@@ -532,8 +532,9 @@ export class BattleSim {
   // Public helpers for external control
   drawCard(): void {
     const s = this.state;
-    const pool = s.drawPile && s.drawPile.length > 0 ? s.drawPile : CARDS.map((c) => c.id);
-    const id = pool[this.rng.int(0, pool.length - 1)];
+    if (!s.drawPile || s.drawPile.length === 0) return;
+    const idx = this.rng.int(0, s.drawPile.length - 1);
+    const id = s.drawPile.splice(idx, 1)[0];
     const inst = { instanceId: s.nextUnitId++, defId: id };
     s.deck.push(inst);
     this.emit("card.drawn", { defId: id, instanceId: inst.instanceId });
