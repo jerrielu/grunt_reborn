@@ -5,7 +5,7 @@ import { applyDamage, heal, knockback, distance, findNearest } from "../combat";
 import { playCard as playCardImpl } from "../cards/CardEngine";
 import { CARDS } from "../../config/cards";
 
-const ARENA = { w: 180, h: 335 };
+const ARENA = { w: 180, h: 350 };
 const WALL = 12;
 
 function clamp(v: number, lo: number, hi: number): number {
@@ -425,7 +425,7 @@ export class BattleSim {
       if (!r.alive) continue;
       if (r.spawnAt > s.levelTime) continue;
       // lateral weave: segments of varying length/direction, bigger amplitude
-     const traveled = 335 - r.y;
+     const traveled = 350 - r.y;
      const segLen = 50 + (r.id % 3) * 18;
      const seg = Math.floor(traveled / segLen);
      const dir = ((r.id * 7 + seg * 13) % 2 === 0) ? 1 : -1;
@@ -493,7 +493,7 @@ export class BattleSim {
 
   private tickFlyers(dt: number): void {
     const s = this.state;
-    const W = 180, H = 335, WALL = 12;
+    const W = 180, H = 350, WALL = 12;
     for (const f of s.flyers) {
       if (!f.alive) continue;
       f.x += f.vx * dt;

@@ -19,7 +19,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   create(): void {
-    const w = 180, h = 335;
+    const w = 180, h = 350;
     const key = TileFactory.ensureGroundTexture(this, w, h);
     const ground = this.add.image(0, 0, key).setOrigin(0, 0);
     const border = this.add.graphics();
@@ -126,7 +126,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   playShenzhenLightEffect(): void {
-    const flash = this.add.rectangle(90, 167, 180, 335, 0xffffaa, 0.45);
+    const flash = this.add.rectangle(90, 175, 180, 350, 0xffffaa, 0.45);
     this.tweens.add({ targets: flash, alpha: 0, duration: 320, onComplete: () => flash.destroy() });
 
     const riders = this.sim.state.riders ?? [];
@@ -287,7 +287,7 @@ export class BattleScene extends Phaser.Scene {
     this.syncUnits();
     this.syncRiders();
     // move knocked-away crashed motorcycles bouncing around battlefield, exit top
-    const W = 180, H = 335;
+    const W = 180, H = 350;
     for (let i = this.crashFlyers.length - 1; i >= 0; i--) {
       const f = this.crashFlyers[i];
       f.life += dt;

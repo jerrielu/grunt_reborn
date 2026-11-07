@@ -80,7 +80,7 @@ function applyInstant(state: RunState, cardId: string, rng: { int: (a: number, b
         id,
         x,
         baseX: x,
-        y: 335 - 10,
+        y: 350 - 10,
         speed: 360,
         damage: 18,
         radius: 10,
