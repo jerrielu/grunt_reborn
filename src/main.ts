@@ -20,7 +20,7 @@ const config: Phaser.Types.Core.GameConfig = {
   pixelArt: true,
   roundPixels: true,
   scale: {
-    mode: Phaser.Scale.ENVELOP,
+    mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH
   },
   physics: { default: "arcade", arcade: { gravity: { x: 0, y: 0 }, debug: false } },

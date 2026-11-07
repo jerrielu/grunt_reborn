@@ -1,5 +1,7 @@
 # AGENTS.md
 
+- Use the same language you received to reply.
+
 This game is designed for mobile phone in portrait mode.
 
 ## Drawing Elements
