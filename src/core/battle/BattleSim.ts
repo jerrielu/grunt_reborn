@@ -278,7 +278,8 @@ export class BattleSim {
         const dmg = Math.round(h.attackDamage * dmgMul * (backstab ? 1.35 : 1));
         const res = applyDamage(target, dmg, 1);
         if (tactics.some(t => t.behavior === "steady")) {
-          heal(h, Math.max(1, Math.round(dmg * 0.05)));
+          const _healed = heal(h, Math.max(1, Math.round(dmg * 0.05)));
+          if (_healed > 0) this.emit("heal", { targetId: h.id, amount: _healed });
         }
         this.emit("hero.attack", { targetId: target.id, dmg, killed: res.killed, backstab });
         if (res.killed) {
@@ -514,7 +515,8 @@ export class BattleSim {
     s.levelsCleared++;
     s.phase = "reward";
     const healAmt = Math.round(s.hero.maxHp * 0.3);
-    heal(s.hero, healAmt);
+    const _healed = heal(s.hero, healAmt);
+    if (_healed > 0) this.emit("heal", { targetId: s.hero.id, amount: _healed });
     // reward choices: 3 distinct cards from a small pool
     const pool = CARDS.map((c) => c.id);
     const rng = this.rng;

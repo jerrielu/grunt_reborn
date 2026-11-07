@@ -29,11 +29,12 @@ export class BattleScene extends Phaser.Scene {
     this.cameras.main.setZoom(1);
     this.sim.events.on("unit.died", (e) => {
       const u = this.findUnit(e.data.id as number);
-      if (u) this.spawnDamageText(u.x, u.y, "💀", "#ff6666");
+      if (u) this.spawnDamageText(u.x, u.y, "💀", "normal");
     });
     this.sim.events.on("hero.attack", (e) => {
       const tgt = this.findUnit(e.data.targetId as number);
-      if (tgt) this.spawnDamageText(tgt.x, tgt.y, `-${e.data.dmg}`, "#ffff88");
+      const isBig = e.data.omni === true;
+      if (tgt) this.spawnDamageText(tgt.x, tgt.y, `-${e.data.dmg}`, isBig ? "big" : "normal");
       const hero = this.sim.state.hero;
       const hc = this.unitSprites.get(hero.id);
       if (hc && tgt) this.playAttack(hc, tgt.x, tgt.y);
@@ -42,7 +43,8 @@ export class BattleScene extends Phaser.Scene {
     });
     this.sim.events.on("enemy.attack", (e) => {
       const tgt = this.findUnit(e.data.targetId as number);
-      if (tgt) this.spawnDamageText(tgt.x, tgt.y, `-${e.data.dmg}`, "#ff8888");
+      const style = tgt && tgt.side === "hero" ? "player" : "normal";
+      if (tgt) this.spawnDamageText(tgt.x, tgt.y, `-${e.data.dmg}`, style);
       const atk = this.findUnit(e.data.attackerId as number);
       const ac = atk ? this.unitSprites.get(atk.id) : undefined;
       if (ac && tgt) this.playAttack(ac, tgt.x, tgt.y);
@@ -51,12 +53,25 @@ export class BattleScene extends Phaser.Scene {
     });
     this.sim.events.on("summon.attack", (e) => {
       const tgt = this.findUnit(e.data.targetId as number);
-      if (tgt) this.spawnDamageText(tgt.x, tgt.y, `-${e.data.dmg}`, "#88ff88");
+      if (tgt) this.spawnDamageText(tgt.x, tgt.y, `-${e.data.dmg}`, "normal");
       const atk = this.findUnit(e.data.attackerId as number);
       const ac = atk ? this.unitSprites.get(atk.id) : undefined;
       if (ac && tgt) this.playAttack(ac, tgt.x, tgt.y);
       const tc = tgt ? this.unitSprites.get(tgt.id) : undefined;
       if (tc) this.playHit(tc);
+    });
+    this.sim.events.on("rider.crash", (e) => {
+      const tgt = this.findUnit(e.data.targetId as number);
+      if (tgt) this.spawnDamageText(tgt.x, tgt.y, `-${e.data.dmg}`, "big");
+      else this.spawnDamageText(e.data.x as number, e.data.y as number, `-${e.data.dmg}`, "big");
+    });
+    this.sim.events.on("flyer.hit", (e) => {
+      const tgt = this.findUnit(e.data.targetId as number);
+      if (tgt) this.spawnDamageText(tgt.x, tgt.y, `-${e.data.dmg}`, "big");
+    });
+    this.sim.events.on("heal", (e) => {
+      const tgt = this.findUnit(e.data.targetId as number);
+      if (tgt) this.spawnDamageText(tgt.x, tgt.y - 4, `+${e.data.amount}`, "heal");
     });
     this.sim.events.on("instant.shenzhenLight", () => this.playShenzhenLightEffect());
     this.sim.events.on("rider.crash", (e) => this.playRiderCrash(e.data.x as number, e.data.y as number));
@@ -68,10 +83,36 @@ export class BattleScene extends Phaser.Scene {
     return [...s.enemies, ...s.summons].find((u) => u.id === id);
   }
 
-  spawnDamageText(x: number, y: number, text: string, color: string): void {
-    const t = this.add.text(x, y - 10, text, { color, fontSize: "12px", fontStyle: "bold" });
+  spawnDamageText(x: number, y: number, text: string, style: string): void {
+    let color = "#ffe08a";
+    let fontSize = "12px";
+    let stroke = 2;
+    if (style === "big") { color = "#ff5522"; fontSize = "18px"; stroke = 3; }
+    else if (style === "player") { color = "#ff3333"; fontSize = "13px"; stroke = 2; }
+    else if (style === "heal") { color = "#66ff88"; fontSize = "12px"; stroke = 2; }
+    const t = this.add.text(x, y - 10, text, { color, fontSize, fontStyle: "bold" });
     t.setOrigin(0.5);
-    this.tweens.add({ targets: t, y: y - 40, alpha: 0, duration: 600, onComplete: () => t.destroy() });
+    t.setStroke("#000000", stroke);
+    t.setDepth(1000);
+    if (style === "big") {
+      t.setScale(0.6);
+      this.tweens.add({ targets: t, scale: 1.35, duration: 120, ease: "Back.easeOut", onComplete: () => {
+        this.tweens.add({ targets: t, scale: 1.1, duration: 80, yoyo: true, repeat: 2 });
+      } });
+      this.tweens.add({ targets: t, y: y - 70, alpha: 0, duration: 900, ease: "Cubic.easeOut", delay: 60, onComplete: () => t.destroy() });
+      // tremble
+      this.tweens.add({ targets: t, x: x + 3, duration: 60, yoyo: true, repeat: 6 });
+    } else if (style === "player") {
+      this.tweens.add({ targets: t, y: y - 38, alpha: 0, duration: 500, ease: "Cubic.easeOut", onComplete: () => t.destroy() });
+      this.tweens.add({ targets: t, x: x + 4, duration: 40, yoyo: true, repeat: 3 });
+    } else if (style === "heal") {
+      this.tweens.add({ targets: t, y: y - 32, alpha: 0, duration: 800, ease: "Sine.easeOut", onComplete: () => t.destroy() });
+      this.tweens.add({ targets: t, x: x + (Math.random() < 0.5 ? -2 : 2), duration: 300, yoyo: true, repeat: 1 });
+    } else {
+      // normal: slight wobble
+      this.tweens.add({ targets: t, y: y - 45, alpha: 0, duration: 700, ease: "Sine.easeOut", onComplete: () => t.destroy() });
+      this.tweens.add({ targets: t, x: x + 4, duration: 120, yoyo: true, repeat: 2 });
+    }
   }
 
   playShenzhenLightEffect(): void {
