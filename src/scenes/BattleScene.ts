@@ -51,6 +51,15 @@ export class BattleScene extends Phaser.Scene {
       const tc = tgt ? this.unitSprites.get(tgt.id) : undefined;
       if (tc) this.playHit(tc);
     });
+    this.sim.events.on("enemyHero.attack", (e) => {
+      const tgt = this.findUnit(e.data.targetId as number);
+      if (tgt) this.spawnDamageText(tgt.x, tgt.y, `-${e.data.dmg}`, "player");
+      const atk = this.findUnit(e.data.attackerId as number);
+      const ac = atk ? this.unitSprites.get(atk.id) : undefined;
+      if (ac && tgt) this.playAttack(ac, tgt.x, tgt.y);
+      const tc = tgt ? this.unitSprites.get(tgt.id) : undefined;
+      if (tc) this.playHit(tc);
+    });
     this.sim.events.on("summon.attack", (e) => {
       const tgt = this.findUnit(e.data.targetId as number);
       if (tgt) this.spawnDamageText(tgt.x, tgt.y, `-${e.data.dmg}`, "normal");
@@ -80,6 +89,7 @@ export class BattleScene extends Phaser.Scene {
   findUnit(id: number): Unit | undefined {
     const s = this.sim.state;
     if (s.hero.id === id) return s.hero;
+    if (s.enemyHero.id === id) return s.enemyHero;
     return [...s.enemies, ...s.summons].find((u) => u.id === id);
   }
 
@@ -325,7 +335,7 @@ export class BattleScene extends Phaser.Scene {
 
   syncUnits(): void {
     const s = this.sim.state;
-    const all: Unit[] = [s.hero, ...s.enemies, ...s.summons].filter((u) => u.alive);
+    const all: Unit[] = [s.hero, s.enemyHero, ...s.enemies, ...s.summons].filter((u) => u.alive);
     for (const [id, c] of this.unitSprites) {
       if (!all.find((u) => u.id === id)) {
         this.tweens.killTweensOf(c);
@@ -340,7 +350,8 @@ export class BattleScene extends Phaser.Scene {
       let c = this.unitSprites.get(u.id);
       if (!c) {
         c = this.add.container(u.x, u.y);
-        const base = u.side === "enemy" ? "soldier" : (u.side === "hero" && this.sim.state.generalId === "vanguard" ? "vanguard" : "hero");
+        const isEnemyHero = u === this.sim.state.enemyHero || (u as any).isHero === true && u.side === "enemy";
+        const base = isEnemyHero ? "hero" : (u.side === "enemy" ? "soldier" : (u.side === "hero" && this.sim.state.generalId === "vanguard" ? "vanguard" : "hero"));
         const shadow = this.add.ellipse(0, 14, 26, 8, 0x000000, 0.35);
         c.add(shadow);
         c.setData("shadow", shadow);
@@ -360,7 +371,7 @@ export class BattleScene extends Phaser.Scene {
         c.setData("lower", lower);
         const label = this.add.text(0, -13, u.name, { fontSize: "8px", color: "#fff", fontFamily: "monospace" }).setOrigin(0.5);
         c.add(label);
-        if (u.side === "hero") {
+        if (u.side === "hero" || u === this.sim.state.enemyHero) {
           const sw = this.add.image(16, -4, "sword");
           sw.setScale(0.448);
           c.add(sw);
@@ -374,7 +385,8 @@ export class BattleScene extends Phaser.Scene {
       const upper = c.getData("upper") as Phaser.GameObjects.Image;
       const lower = c.getData("lower") as Phaser.GameObjects.Image;
       if (upper && lower) {
-        const base = (upper.getData("base") as string) || (u.side === "enemy" ? "soldier" : (u.side === "hero" && this.sim.state.generalId === "vanguard" ? "vanguard" : "hero"));
+        const isEnemyHero = u === this.sim.state.enemyHero || (u as any).isHero === true && u.side === "enemy";
+        const base = isEnemyHero ? "hero" : ((upper.getData("base") as string) || (u.side === "enemy" ? "soldier" : (u.side === "hero" && this.sim.state.generalId === "vanguard" ? "vanguard" : "hero")));
         upper.setData("base", base);
         lower.setData("base", base);
         const dir = this.dirFromFacing(u.facing);

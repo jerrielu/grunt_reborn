@@ -8,11 +8,22 @@ export function attachHandPanel(sim: BattleSim, onReward: (cardId: string) => vo
   // remove any leftover panel from a previous run
   document.getElementById("hand-panel")?.remove();
   document.getElementById("decide-bar")?.remove();
+  document.getElementById("enemy-hand-panel")?.remove();
 
   const panel = document.createElement("div");
   panel.id = "hand-panel";
   panel.style.cssText = "position:absolute;left:0;right:0;bottom:0;height:10%;background:linear-gradient(180deg,#5a3a1a 0%,#3a2410 100%);color:#fff;font-family:monospace;z-index:9;display:flex;align-items:center;justify-content:space-between;padding:6px 10px;box-sizing:border-box;border-top:2px solid #2a1a08;overflow:visible;";
   root.appendChild(panel);
+
+  // opponent desk (top)
+  const topPanel = document.createElement("div");
+  topPanel.id = "enemy-hand-panel";
+  topPanel.style.cssText = "position:absolute;left:0;right:0;top:0;height:10%;background:linear-gradient(180deg,#3a2410 0%,#5a3a1a 100%);color:#fff;font-family:monospace;z-index:9;display:flex;align-items:center;justify-content:flex-end;padding:6px 10px;box-sizing:border-box;border-bottom:2px solid #2a1a08;overflow:visible;";
+  root.appendChild(topPanel);
+
+  const topDeckArea = document.createElement("div");
+  topDeckArea.style.cssText = "position:relative;flex:0 0 20%;height:100%;display:flex;align-items:center;justify-content:center;padding:4px 6px;box-sizing:border-box;";
+  topPanel.appendChild(topDeckArea);
 
   // desk texture lines
   const desk = document.createElement("div");
@@ -367,6 +378,73 @@ const cards = s.deck;
   });
   sim.events.on("card.played", () => render());
   sim.events.on("card.rejected", () => render());
+
+  // opponent card play display
+  sim.events.on("enemy.card.played", (e) => {
+    const cardId = e.data.defId as string;
+    const def = getCard(cardId);
+    const rootRect = root.getBoundingClientRect();
+    const topRect = topDeckArea.getBoundingClientRect();
+    const float = document.createElement("div");
+    float.style.cssText = "position:absolute;z-index:20;pointer-events:none;display:flex;flex-direction:column;align-items:center;";
+    const canvas = renderCardCanvas(cardId, 2);
+    const img = document.createElement("img");
+    img.src = canvas.toDataURL("image/png");
+    img.style.cssText = "width:256px;height:384px;image-rendering:pixelated;border:2px solid #fff;box-shadow:0 4px 12px rgba(0,0,0,0.8);";
+    float.appendChild(img);
+    const label = document.createElement("div");
+    label.style.cssText = "margin-top:6px;font-size:12px;color:#fff;text-align:center;max-width:220px;";
+    label.textContent = def ? def.name + " — " + def.description : cardId;
+    float.appendChild(label);
+    const startLeft = topRect.left - rootRect.left + topRect.width / 2 - 128;
+    const startTop = topRect.top - rootRect.top + topRect.height / 2 - 192;
+    float.style.left = startLeft + "px";
+    float.style.top = startTop + "px";
+    float.style.transform = "scale(0.24)";
+    float.style.transformOrigin = "top left";
+    root.appendChild(float);
+
+    const targetLeft = (root.clientWidth - 256) / 2;
+    const targetTop = (root.clientHeight - 384) / 2;
+    const moveAnim = float.animate([
+      { left: startLeft + "px", top: startTop + "px", transform: "scale(0.24)" },
+      { left: targetLeft + "px", top: targetTop + "px", transform: "scale(1)" },
+    ], { duration: 280, easing: "cubic-bezier(0.2,0.8,0.2,1)", fill: "forwards" });
+    let done = false;
+    let blast: HTMLDivElement | null = null;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      try { moveAnim.cancel(); } catch {}
+      try { if (blast) blast.remove(); } catch {}
+      float.remove();
+      // table slap shake
+      topPanel.animate([{ transform: "translateY(0)" }, { transform: "translateY(4px)" }, { transform: "translateY(0)" }], { duration: 180, easing: "ease-out" });
+    };
+    const startBlast = () => {
+      float.style.left = targetLeft + "px";
+      float.style.top = targetTop + "px";
+      float.style.transform = "scale(1)";
+      float.style.transformOrigin = "";
+      blast = document.createElement("div");
+      blast.style.cssText = "position:absolute;left:50%;top:50%;width:40px;height:40px;margin-left:-20px;margin-top:-20px;border-radius:50%;background:radial-gradient(circle,rgba(255,220,80,0.95),rgba(255,120,0,0.5) 55%,transparent 72%);z-index:21;pointer-events:none;";
+      root.appendChild(blast);
+      const blastAnim = blast.animate([
+        { transform: "scale(0.4)", opacity: 1 },
+        { transform: "scale(7)", opacity: 0 },
+      ], { duration: 420, easing: "ease-out", fill: "forwards" });
+      blastAnim.onfinish = finish;
+      blastAnim.oncancel = finish;
+    };
+    moveAnim.onfinish = () => startBlast();
+    moveAnim.oncancel = () => startBlast();
+    window.setTimeout(() => {
+      if (!done) {
+        if (!blast) startBlast();
+        window.setTimeout(() => finish(), 450);
+      }
+    }, 320);
+  });
   sim.events.on("level.start", () => { render(); updateDecideBar(); });
   sim.events.on("phase.changed", () => { updateDecideBar(); if (!isDrawing) render(); });
 
