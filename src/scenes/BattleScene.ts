@@ -8,6 +8,7 @@ export class BattleScene extends Phaser.Scene {
   unitSprites: Map<number, Phaser.GameObjects.Container> = new Map();
   riderSprites: Map<number, Phaser.GameObjects.Container> = new Map();
   crashFlyers: { c: Phaser.GameObjects.Container; vx: number; vy: number; life: number; bounces: number }[] = [];
+  damageMerge: Map<string, { obj: Phaser.GameObjects.Text; value: number; last: number; style: string }> = new Map();
   heroShadow!: Phaser.GameObjects.Ellipse;
   arenaGfx!: Phaser.GameObjects.Graphics;
   hpBars: Map<number, Phaser.GameObjects.Graphics> = new Map();
@@ -93,35 +94,105 @@ export class BattleScene extends Phaser.Scene {
     return [...s.enemies, ...s.summons].find((u) => u.id === id);
   }
 
+  private abbreviateNum(n: number): string {
+    const a = Math.abs(n);
+    if (a < 1000) return String(n);
+    if (a < 10000) return (n / 1000).toFixed(1).replace(/\\.0$/, "") + "k";
+    if (a < 1000000) return Math.round(n / 1000) + "k";
+    return (n / 1000000).toFixed(1).replace(/\\.0$/, "") + "m";
+  }
+
+  private styleConfig(style: string): { color: string; fontSize: string; stroke: number; duration: number; float: number; pop: number } {
+    if (style === "big") return { color: "#ff5522", fontSize: "18px", stroke: 3, duration: 1000, float: 70, pop: 1.4 };
+    if (style === "player") return { color: "#ff3333", fontSize: "13px", stroke: 2, duration: 900, float: 42, pop: 1.25 };
+    if (style === "heal") return { color: "#66ff88", fontSize: "12px", stroke: 2, duration: 900, float: 36, pop: 1.2 };
+    return { color: "#ffe08a", fontSize: "12px", stroke: 2, duration: 800, float: 48, pop: 1.15 };
+  }
+
   spawnDamageText(x: number, y: number, text: string, style: string): void {
-    let color = "#ffe08a";
-    let fontSize = "12px";
-    let stroke = 2;
-    if (style === "big") { color = "#ff5522"; fontSize = "18px"; stroke = 3; }
-    else if (style === "player") { color = "#ff3333"; fontSize = "13px"; stroke = 2; }
-    else if (style === "heal") { color = "#66ff88"; fontSize = "12px"; stroke = 2; }
-    const t = this.add.text(x, y - 10, text, { color, fontSize, fontStyle: "bold" });
+    const cfg = this.styleConfig(style);
+    const now = this.time.now;
+    const key = style + ":" + Math.round(x / 12) + ":" + Math.round(y / 12);
+    const MERGE_WINDOW = 160;
+    const existing = this.damageMerge.get(key);
+    // try merge if recent and not destroyed
+    const numMatch = /^([+-]?)(\\d+(?:\\.\\d+)?)(k|m)?$/i.exec(text.trim());
+    if (existing && now - existing.last < MERGE_WINDOW && existing.obj.active) {
+      if (numMatch && !isNaN(existing.value)) {
+        const sign = numMatch[1] === "-" ? -1 : 1;
+        const val = parseFloat(numMatch[2]) * (numMatch[3]?.toLowerCase() === "k" ? 1000 : numMatch[3]?.toLowerCase() === "m" ? 1000000 : 1);
+        existing.value += sign * val;
+        const abs = Math.abs(existing.value);
+        const disp = style === "heal" ? "+" + this.abbreviateNum(abs) : (existing.value < 0 ? "-" + this.abbreviateNum(abs) : this.abbreviateNum(existing.value));
+        existing.obj.setText(disp);
+        existing.last = now;
+        // pulse
+        this.tweens.killTweensOf(existing.obj);
+        this.tweens.add({ targets: existing.obj, scale: cfg.pop, duration: 90, yoyo: true, ease: "Back.easeOut" });
+        return;
+      }
+    }
+
+    // compute stagger offset based on nearby active merge entries
+    let stagger = 0;
+    let idx = 0;
+    for (const [k, v] of this.damageMerge) {
+      if (v.obj.active && now - v.last < cfg.duration) idx++;
+    }
+    stagger = Math.min(idx, 4) * 40;
+
+    // abbreviate if numeric
+    let finalText = text;
+    const m2 = /^([+-]?)(\\d+(?:\\.\\d+)?)$/.exec(text.trim());
+    if (m2) {
+      const n = parseFloat(m2[1] + m2[2]);
+      const sign = m2[1];
+      finalText = sign + this.abbreviateNum(Math.abs(n));
+    }
+
+    const t = this.add.text(x, y - 12, finalText, { color: cfg.color, fontSize: cfg.fontSize, fontStyle: "bold" });
     t.setOrigin(0.5);
-    t.setStroke("#000000", stroke);
+    t.setStroke("#000000", cfg.stroke);
     t.setDepth(1000);
-    if (style === "big") {
-      t.setScale(0.6);
-      this.tweens.add({ targets: t, scale: 1.35, duration: 120, ease: "Back.easeOut", onComplete: () => {
-        this.tweens.add({ targets: t, scale: 1.1, duration: 80, yoyo: true, repeat: 2 });
-      } });
-      this.tweens.add({ targets: t, y: y - 70, alpha: 0, duration: 900, ease: "Cubic.easeOut", delay: 60, onComplete: () => t.destroy() });
-      // tremble
-      this.tweens.add({ targets: t, x: x + 3, duration: 60, yoyo: true, repeat: 6 });
-    } else if (style === "player") {
-      this.tweens.add({ targets: t, y: y - 38, alpha: 0, duration: 500, ease: "Cubic.easeOut", onComplete: () => t.destroy() });
-      this.tweens.add({ targets: t, x: x + 4, duration: 40, yoyo: true, repeat: 3 });
+    t.setScale(0.5);
+    t.setAlpha(0);
+
+    // merge registration
+    let initVal = NaN;
+    if (m2) initVal = parseFloat(m2[1] + m2[2]);
+    this.damageMerge.set(key, { obj: t, value: initVal, last: now, style });
+
+    const popTween = this.tweens.add({
+      targets: t,
+      scale: cfg.pop,
+      alpha: 1,
+      duration: 120,
+      delay: stagger,
+      ease: "Back.easeOut",
+      onComplete: () => {
+        this.tweens.add({ targets: t, scale: 1.0, duration: 80, ease: "Quad.easeOut" });
+      },
+    });
+
+    // float up + fade
+    this.tweens.add({
+      targets: t,
+      y: y - 12 - cfg.float,
+      alpha: 0,
+      duration: cfg.duration,
+      delay: stagger + 60,
+      ease: "Cubic.easeOut",
+      onComplete: () => {
+        t.destroy();
+        this.damageMerge.delete(key);
+      },
+    });
+
+    // subtle horizontal wobble for big/player
+    if (style === "big" || style === "player") {
+      this.tweens.add({ targets: t, x: x + (style === "big" ? 4 : 3), duration: 60, yoyo: true, repeat: style === "big" ? 5 : 3, delay: stagger });
     } else if (style === "heal") {
-      this.tweens.add({ targets: t, y: y - 32, alpha: 0, duration: 800, ease: "Sine.easeOut", onComplete: () => t.destroy() });
-      this.tweens.add({ targets: t, x: x + (Math.random() < 0.5 ? -2 : 2), duration: 300, yoyo: true, repeat: 1 });
-    } else {
-      // normal: slight wobble
-      this.tweens.add({ targets: t, y: y - 45, alpha: 0, duration: 700, ease: "Sine.easeOut", onComplete: () => t.destroy() });
-      this.tweens.add({ targets: t, x: x + 4, duration: 120, yoyo: true, repeat: 2 });
+      this.tweens.add({ targets: t, x: x + (Math.random() < 0.5 ? -2 : 2), duration: 250, yoyo: true, repeat: 1, delay: stagger });
     }
   }
 
