@@ -77,7 +77,7 @@ export interface RiderUnit {
   crashed: boolean;
   explodeRadius: number;
   explodeDamage: number;
-  spawnAt: number; // roundTime at which this rider appears
+  spawnAt: number; // levelTime at which this rider appears
   vx: number; // horizontal velocity (inertia)
   vy: number; // vertical velocity (inertia)
 }
@@ -141,7 +141,7 @@ export interface RunState {
   bossesKilled: number;
   levelsCleared: number;
   nextUnitId: number;
-  spawnQueue: { kind: "grunt" | "elite" | "boss"; at: number }[]; // scheduled spawns (time in round)
+  spawnQueue: { kind: "grunt" | "elite" | "boss"; at: number }[]; // scheduled spawns (time in levelTime)
   roundTime: number; // elapsed seconds in current fight phase (resets each round)
   levelTime: number; // elapsed seconds since level start (cumulative across rounds)
   nextDrawAt: number; // levelTime threshold for next automatic card draw

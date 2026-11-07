@@ -70,7 +70,7 @@ function applyInstant(state: RunState, cardId: string, rng: { int: (a: number, b
   const hero = state.hero;
   if (cardId === "shenzhenLight") {
     const count = 6;
-    let cursor = state.roundTime;
+    let cursor = state.levelTime;
     for (let i = 0; i < count; i++) {
       const id = state.nextUnitId++;
       const side = i % 2 === 0 ? "left" : "right";

@@ -96,10 +96,10 @@ export class BattleSim {
     s.levelTime += dt;
     s.timer = s.fightSeconds - s.roundTime;
 
-    // process spawns
+    // process spawns (scheduled on levelTime, which never resets between rounds)
     const remaining: typeof s.spawnQueue = [];
     for (const sp of s.spawnQueue) {
-      if (s.roundTime >= sp.at) {
+      if (s.levelTime >= sp.at) {
         this.spawnEnemy(sp.kind);
       } else {
         remaining.push(sp);
@@ -166,6 +166,8 @@ export class BattleSim {
       s.phase = "decide";
       s.timer = 0;
       this.emit("phase.changed", { phase: "decide" });
+      // nothing to play and nothing to draw: resume instead of freezing forever
+      if (s.deck.length === 0 && s.drawPile.length === 0) this.endDecide();
     }
   }
 
@@ -362,7 +364,7 @@ export class BattleSim {
     const s = this.state;
     for (const r of s.riders) {
       if (!r.alive) continue;
-      if (r.spawnAt > s.roundTime) continue;
+      if (r.spawnAt > s.levelTime) continue;
       // lateral weave: segments of varying length/direction, bigger amplitude
      const traveled = 335 - r.y;
      const segLen = 50 + (r.id % 3) * 18;

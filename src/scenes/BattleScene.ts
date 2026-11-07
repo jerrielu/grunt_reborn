@@ -409,9 +409,9 @@ export class BattleScene extends Phaser.Scene {
        this.riderSprites.delete(id);
      }
    }
-   const roundTime = this.sim.state.roundTime;
+   const levelTime = this.sim.state.levelTime;
    for (const r of riders) {
-     if (r.spawnAt > roundTime) continue;
+     if (r.spawnAt > levelTime) continue;
      let c = this.riderSprites.get(r.id);
      if (!c) {
        c = this.add.container(r.x, r.y);
