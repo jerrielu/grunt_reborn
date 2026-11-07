@@ -50,6 +50,13 @@ export interface EnemyUnit extends Unit {
   isBoss: boolean;
 }
 
+export interface EnemyHeroUnit extends Unit {
+  side: "enemy";
+  lowHpThreshold: number;
+  retreating: boolean;
+  isHero: true;
+}
+
 export interface FlyerUnit {
   id: number;
   kind: "person" | "car";
@@ -127,6 +134,7 @@ export interface RunState {
   timer: number; // seconds remaining in fight phase
   fightSeconds: number; // 10 normally, 7 for boss
   hero: HeroUnit;
+  enemyHero: EnemyHeroUnit;
   enemies: EnemyUnit[];
   summons: SummonUnit[];
   riders: RiderUnit[];
@@ -135,6 +143,12 @@ export interface RunState {
   drawPile: string[]; // card def ids available to draw from (deck builder selection)
   equipment: { weapon: string | null; armor: string | null; boots: string | null };
   buffs: Buff[]; // active tactic buffs
+  // opponent hero state (mirrors player)
+  enemyHand: CardInstance[];
+  enemyDrawPile: string[];
+  enemyEquipment: { weapon: string | null; armor: string | null; boots: string | null };
+  enemyBuffs: Buff[];
+  enemyNextDrawAt: number;
   roundBuffs: { slowEnemies: number; heroDamageBoost: number; heroDamageTakenBoost: number }; // instant round-scoped
   kills: number;
   elitesKilled: number;

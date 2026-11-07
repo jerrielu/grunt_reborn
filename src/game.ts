@@ -4,6 +4,7 @@ import { LocalStorageAdapter } from "./save/localStorageAdapter";
 import { createRunState, BattleSim } from "./core/battle/BattleSim";
 import { computePoints } from "./core/meta/settlement";
 import { CARDS } from "./config/cards";
+import { ENEMIES, buildEnemyDeck } from "./config/enemies";
 
 export class GameController {
   meta: MetaStore;
@@ -34,6 +35,10 @@ export class GameController {
     const ids = base.filter((id) => this.meta.state.unlockedCards.includes(id));
     state.deck = [];
     state.drawPile = ids.length > 0 ? ids : (starterMap[generalId] ?? starterMap.shoucheng);
+    // enemy deck: random build from enemy config
+    const enemyCfg = ENEMIES[0];
+    const enemyDeck = buildEnemyDeck(enemyCfg, (a, b) => Math.floor(Math.random() * (b - a + 1)) + a);
+    state.enemyDrawPile = enemyDeck.length > 0 ? enemyDeck : (starterMap[generalId] ?? starterMap.shoucheng);
     const sim = new BattleSim(state);
     this.sim = sim;
     return sim;

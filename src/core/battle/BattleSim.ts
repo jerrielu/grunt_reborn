@@ -1,4 +1,4 @@
-import type { RunState, HeroUnit, EnemyUnit, SummonUnit, Unit, RiderUnit, FlyerUnit } from "../types";
+import type { RunState, HeroUnit, EnemyUnit, SummonUnit, Unit, RiderUnit, FlyerUnit, EnemyHeroUnit } from "../types";
 import { EventEmitter } from "../events";
 import { Rng } from "../rng";
 import { applyDamage, heal, knockback, distance, findNearest } from "../combat";
@@ -25,9 +25,20 @@ function makeHero(id: number, generalId: string): HeroUnit {
   return base;
 }
 
-export function createRunState(seed: number, generalId: string): RunState {
+function makeEnemyHero(id: number): EnemyHeroUnit {
+  return {
+    id, side: "enemy", name: "敌方主角", x: ARENA.w / 2, y: WALL + 40, hp: 120, maxHp: 120,
+    speed: 0, attackDamage: 12, attackRange: 46, attackInterval: 0.7, attackCooldown: 0,
+    radius: 14, alive: true, targetId: null, facing: Math.PI,
+    damageTakenMul: 1, damageDealtMul: 1, speedMul: 1, attackIntervalMul: 1,
+    knockVx: 0, knockVy: 0, lowHpThreshold: 0.3, retreating: false, isHero: true,
+  };
+}
+
+export function createRunState(seed: number, generalId: string, enemyGeneralId: string = "shoucheng"): RunState {
   const rng = new Rng(seed);
   const hero = makeHero(1, generalId);
+  const enemyHero = makeEnemyHero(100000);
   const wavesTotal = 3 + Math.min(2, Math.floor(0 / 2));
   const starterMap: Record<string, string[]> = {
     shoucheng: ["omnislash"],
@@ -35,15 +46,20 @@ export function createRunState(seed: number, generalId: string): RunState {
     summoner: ["omnislash"],
   };
   const starterIds = starterMap[generalId] ?? starterMap.shoucheng;
+  const enemyStarterIds = starterMap[enemyGeneralId] ?? starterMap.shoucheng;
   const state: RunState = {
     seed, generalId, level: 1, round: 0, phase: "fight", timer: 10, fightSeconds: 10,
-    hero, enemies: [], summons: [], riders: [], flyers: [],
+    hero, enemyHero, enemies: [], summons: [], riders: [], flyers: [],
     deck: [], drawPile: [...starterIds], equipment: { weapon: null, armor: null, boots: null },
     buffs: [], roundBuffs: { slowEnemies: 1, heroDamageBoost: 1, heroDamageTakenBoost: 1 },
     kills: 0, elitesKilled: 0, bossesKilled: 0, levelsCleared: 0,
     nextUnitId: 2, spawnQueue: [], roundTime: 0, levelTime: 0, nextDrawAt: 0, waveIndex: 0, wavesTotal,
     eliteSpawned: false, bossSpawned: false, rewardChoices: [],
     rngState: rng.getState(), tutorial: false, tutorialStep: 0,
+    enemyHand: [], enemyDrawPile: [...enemyStarterIds],
+    enemyEquipment: { weapon: null, armor: null, boots: null },
+    enemyBuffs: [],
+    enemyNextDrawAt: 0,
   };
   return state;
 }
@@ -69,6 +85,9 @@ export class BattleSim {
   startLevel(): void {
     const s = this.state;
     s.enemies = []; s.summons = []; s.riders = []; s.flyers = []; s.spawnQueue = [];
+    s.enemyHero.hp = s.enemyHero.maxHp; s.enemyHero.alive = true;
+    s.enemyHand = []; s.enemyDrawPile = [...s.enemyDrawPile]; // keep
+    s.enemyNextDrawAt = 0;
     s.round = s.round + 1;
     s.roundTime = 0;
     s.levelTime = 0;
@@ -127,6 +146,7 @@ export class BattleSim {
 
     // tick units
     this.tickHero(dt);
+    if (s.enemyHero.alive) this.tickEnemyHero(dt);
     for (const e of s.enemies) if (e.alive) this.tickEnemy(e, dt);
     for (const sm of s.summons) if (sm.alive) this.tickSummon(sm, dt);
     this.tickRiders(dt);
@@ -142,6 +162,13 @@ export class BattleSim {
         u.knockVy = 0;
         continue;
       }
+      if (u === s.enemyHero) {
+        u.x = ARENA.w / 2;
+        u.y = WALL + 40;
+        u.knockVx = 0;
+        u.knockVy = 0;
+        continue;
+      }
       u.x += u.knockVx * dt;
       u.y += u.knockVy * dt;
       u.knockVx *= Math.pow(0.1, dt);
@@ -152,6 +179,16 @@ export class BattleSim {
 
     // separation
     this.separate();
+
+    // enemy card AI
+    if (s.enemyHero.alive && s.levelTime >= s.enemyNextDrawAt) {
+      this.drawEnemyCard();
+      if (s.enemyHand.length > 0) {
+        const inst = s.enemyHand.shift()!;
+        this.emit("enemy.card.played", { defId: inst.defId, instanceId: inst.instanceId });
+      }
+      s.enemyNextDrawAt = s.levelTime + 4;
+    }
 
     // deaths handling
     this.handleDeaths();
@@ -164,7 +201,7 @@ export class BattleSim {
 
   private allUnits(): Unit[] {
     const s = this.state;
-    return [s.hero, ...s.enemies, ...s.summons];
+    return [s.hero, s.enemyHero, ...s.enemies, ...s.summons];
   }
 
   private spawnEnemy(kind: "grunt" | "elite" | "boss"): void {
@@ -278,6 +315,37 @@ export class BattleSim {
         if (res.killed) {
           this.onEnemyKilled(target as EnemyUnit);
         }
+      }
+    }
+    h.targetId = target ? target.id : null;
+  }
+
+  private tickEnemyHero(dt: number): void {
+    const s = this.state;
+    const h = s.enemyHero;
+    if (!h.alive) return;
+    h.x = ARENA.w / 2;
+    h.y = WALL + 40;
+    // target player hero or summons
+    let target: Unit = s.hero;
+    let bestD = distance(h, s.hero);
+    for (const sm of s.summons) {
+      if (!sm.alive) continue;
+      const d = distance(h, sm);
+      if (d < bestD) { bestD = d; target = sm; }
+    }
+    if (target) h.facing = Math.atan2(target.y - h.y, target.x - h.x);
+    h.attackCooldown = Math.max(0, h.attackCooldown - dt);
+    if (distance(h, target) <= h.attackRange + 4 && h.attackCooldown <= 0) {
+      const dmg = Math.round(h.attackDamage * h.damageDealtMul);
+      const res = applyDamage(target as any, dmg, 1);
+      h.attackCooldown = h.attackInterval * h.attackIntervalMul;
+      this.emit("enemyHero.attack", { attackerId: h.id, targetId: target.id, dmg, killed: res.killed });
+      if (res.killed && target.side === "hero") this.heroDied();
+      if (res.killed && target.side === "summon") {
+        const sm = s.summons.find(x => x.id === target.id);
+        if (sm) sm.alive = false;
+        this.emit("unit.died", { id: target.id, side: "summon" });
       }
     }
     h.targetId = target ? target.id : null;
@@ -459,8 +527,8 @@ export class BattleSim {
         if (d < minD && d > 0) {
           const push = (minD - d) * 0.3;
           const dx = (b.x - a.x) / d; const dy = (b.y - a.y) / d;
-          if (a.side !== "hero") { a.x -= dx * push; a.y -= dy * push; }
-          if (b.side !== "hero") { b.x += dx * push; b.y += dy * push; }
+          if (a.side !== "hero" && a !== this.state.enemyHero) { a.x -= dx * push; a.y -= dy * push; }
+          if (b.side !== "hero" && b !== this.state.enemyHero) { b.x += dx * push; b.y += dy * push; }
         }
       }
     }
@@ -473,6 +541,10 @@ export class BattleSim {
 
   private handleDeaths(): void {
     const s = this.state;
+    if (!s.enemyHero.alive && !this.handledDeaths.has(s.enemyHero.id)) {
+      this.handledDeaths.add(s.enemyHero.id);
+      this.emit("enemyHero.died", { id: s.enemyHero.id });
+    }
     for (const e of s.enemies) {
       if (!e.alive && !this.handledDeaths.has(e.id)) {
         this.handledDeaths.add(e.id);
@@ -525,6 +597,16 @@ export class BattleSim {
   }
 
   // Public helpers for external control
+  drawEnemyCard(): void {
+    const s = this.state;
+    if (!s.enemyDrawPile || s.enemyDrawPile.length === 0) return;
+    const idx = this.rng.int(0, s.enemyDrawPile.length - 1);
+    const id = s.enemyDrawPile.splice(idx, 1)[0];
+    const inst = { instanceId: s.nextUnitId++, defId: id };
+    s.enemyHand.push(inst);
+    this.emit("enemy.card.drawn", { defId: id, instanceId: inst.instanceId });
+  }
+
   drawCard(): void {
     const s = this.state;
     if (!s.drawPile || s.drawPile.length === 0) return;
