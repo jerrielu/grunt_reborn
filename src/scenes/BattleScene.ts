@@ -7,8 +7,7 @@ export class BattleScene extends Phaser.Scene {
   sim!: BattleSim;
   unitSprites: Map<number, Phaser.GameObjects.Container> = new Map();
   riderSprites: Map<number, Phaser.GameObjects.Container> = new Map();
-  crashFlyers: { c: Phaser.GameObjects.Container; vx: number; vy: number }[] = [];
-  freezeTimer: number = 0;
+  crashFlyers: { c: Phaser.GameObjects.Container; vx: number; vy: number; life: number; bounces: number }[] = [];
   heroShadow!: Phaser.GameObjects.Ellipse;
   arenaGfx!: Phaser.GameObjects.Graphics;
   hpBars: Map<number, Phaser.GameObjects.Graphics> = new Map();
@@ -127,7 +126,6 @@ export class BattleScene extends Phaser.Scene {
   }
 
   playRiderCrash(x: number, y: number): void {
-    this.freezeTimer = 0.12;
     // spectacular crash: tumbling scooter + explosion
     const flash = this.add.circle(x, y, 8, 0xff6600, 0.9);
     this.tweens.add({ targets: flash, radius: 60, alpha: 0, duration: 420, ease: "Cubic.easeOut", onComplete: () => flash.destroy() });
@@ -154,16 +152,26 @@ export class BattleScene extends Phaser.Scene {
     this.tweens.add({ targets: debris, angle: 720, x: x + 20, y: y + 10, alpha: 0, duration: 500, onComplete: () => debris.destroy() });
     this.cameras.main.shake(120, 0.008);
     // knocked-away motorcycle flies around the battlefield like a ping-pong ball, then exits top
-    const flyer = this.add.container(x, y);
-    const fw = this.add.rectangle(0, 0, 16, 6, 0x1e1e23);
-    const fh = this.add.rectangle(0, -2, 16, 2, 0x9696a0);
-    const fb = this.add.rectangle(0, 2, 10, 8, 0x50505a);
-    const fhl = this.add.ellipse(0, -6, 10, 8, 0xffcc00);
-    flyer.add([fw, fh, fb, fhl]);
-    flyer.setAngle(Math.random() * 360);
-    const vx = (Math.random() < 0.5 ? -1 : 1) * (90 + Math.random() * 60);
-    const vy = -(150 + Math.random() * 80);
-    this.crashFlyers.push({ c: flyer, vx, vy });
+    for (let k = 0; k < 2; k++) {
+      const isPerson = k === 1;
+      const flyer = this.add.container(x, y);
+      if (isPerson) {
+        const body = this.add.rectangle(0, 0, 8, 10, 0xffcc00);
+        const helmet = this.add.ellipse(0, -6, 8, 7, 0xffcc00);
+        const bag = this.add.rectangle(4, 0, 5, 5, 0xff8800);
+        flyer.add([body, helmet, bag]);
+      } else {
+        const fw = this.add.rectangle(0, 0, 16, 6, 0x1e1e23);
+        const fh = this.add.rectangle(0, -2, 16, 2, 0x9696a0);
+        const fb = this.add.rectangle(0, 2, 10, 8, 0x50505a);
+        const fhl = this.add.ellipse(0, -6, 10, 8, 0xffcc00);
+        flyer.add([fw, fh, fb, fhl]);
+      }
+      flyer.setAngle(Math.random() * 360);
+      const vx = (Math.random() < 0.5 ? -1 : 1) * (90 + Math.random() * 60);
+      const vy = -(150 + Math.random() * 80);
+      this.crashFlyers.push({ c: flyer, vx, vy, life: 0, bounces: 0 });
+    }
   }
 
   playAttack(c: Phaser.GameObjects.Container, tx: number, ty: number): void {
@@ -222,9 +230,7 @@ export class BattleScene extends Phaser.Scene {
   update(_time: number, delta: number): void {
     const dt = delta / 1000;
     const sim = this.sim;
-    if (this.freezeTimer > 0) {
-      this.freezeTimer = Math.max(0, this.freezeTimer - dt);
-    } else if (sim.state.phase === "fight") {
+    if (sim.state.phase === "fight") {
       sim.update(dt);
     }
     this.syncUnits();
@@ -233,13 +239,14 @@ export class BattleScene extends Phaser.Scene {
     const W = 180, H = 335;
     for (let i = this.crashFlyers.length - 1; i >= 0; i--) {
       const f = this.crashFlyers[i];
+      f.life += dt;
       f.c.x += f.vx * dt;
       f.c.y += f.vy * dt;
       f.c.angle += 360 * dt;
-      if (f.c.x < 6) { f.c.x = 6; f.vx = Math.abs(f.vx); }
-      if (f.c.x > W - 6) { f.c.x = W - 6; f.vx = -Math.abs(f.vx); }
-      if (f.c.y > H - 6) { f.c.y = H - 6; f.vy = -Math.abs(f.vy); }
-      if (f.c.y < -20) {
+      if (f.c.x < 6) { f.c.x = 6; f.vx = Math.abs(f.vx); f.bounces++; }
+      if (f.c.x > W - 6) { f.c.x = W - 6; f.vx = -Math.abs(f.vx); f.bounces++; }
+      if (f.c.y > H - 6) { f.c.y = H - 6; f.vy = -Math.abs(f.vy); f.bounces++; }
+      if (f.c.y < -20 || f.life > 4 || f.bounces > 16) {
         f.c.destroy();
         this.crashFlyers.splice(i, 1);
       }
@@ -347,8 +354,16 @@ export class BattleScene extends Phaser.Scene {
    const ids = new Set(riders.map((r: any) => r.id));
    for (const [id, c] of this.riderSprites) {
      if (!ids.has(id)) {
+       const lt = c.getData("lampTween") as Phaser.Tweens.Tween | undefined;
+       if (lt) { try { lt.destroy(); } catch (e) {} }
        this.tweens.killTweensOf(c);
        c.list.forEach((ch: any) => this.tweens.killTweensOf(ch));
+       // belt-and-suspenders: destroy any tween still referencing these objects
+       for (const t of this.tweens.getTweens()) {
+         if (c.list.some((ch: any) => t.hasTarget(ch)) || t.hasTarget(c)) {
+           try { t.destroy(); } catch (e) {}
+         }
+       }
        c.destroy();
        this.riderSprites.delete(id);
      }
@@ -398,7 +413,8 @@ export class BattleScene extends Phaser.Scene {
        const lamp = this.add.rectangle(0, -15, 4, 2, 0x78dcff);
        c.add([rearWheel, rearWheelHi, frontWheel, frontWheelHi, frame, frameHi, frameShade, seat, handleL, handleR, legL, legR, body, bodyShade, bag, bagShade, helmet, helmetHi, helmetShade, earL, earR, lampGlow, lamp]);
        // pulsing lamp chase effect
-       this.tweens.add({ targets: [lamp, lampGlow], alpha: { from: 1, to: 0.4 }, duration: 300, yoyo: true, repeat: -1 });
+       const lampTween = this.tweens.add({ targets: [lamp, lampGlow], alpha: { from: 1, to: 0.4 }, duration: 300, yoyo: true, repeat: -1 });
+       c.setData("lampTween", lampTween);
        this.riderSprites.set(r.id, c);
      }
      c.setPosition(r.x, r.y);

@@ -1,4 +1,4 @@
-import type { RunState, HeroUnit, EnemyUnit, SummonUnit, Unit, RiderUnit } from "../types";
+import type { RunState, HeroUnit, EnemyUnit, SummonUnit, Unit, RiderUnit, FlyerUnit } from "../types";
 import { EventEmitter } from "../events";
 import { Rng } from "../rng";
 import { applyDamage, heal, knockback, distance, findNearest } from "../combat";
@@ -38,7 +38,7 @@ export function createRunState(seed: number, generalId: string): RunState {
   const deck = starterIds.map((defId, i) => ({ instanceId: 100 + i, defId }));
   const state: RunState = {
     seed, generalId, level: 1, round: 0, phase: "fight", timer: 10, fightSeconds: 10,
-    hero, enemies: [], summons: [], riders: [],
+    hero, enemies: [], summons: [], riders: [], flyers: [],
     deck, equipment: { weapon: null, armor: null, boots: null },
     buffs: [], roundBuffs: { slowEnemies: 1, heroDamageBoost: 1, heroDamageTakenBoost: 1 },
     kills: 0, elitesKilled: 0, bossesKilled: 0, levelsCleared: 0,
@@ -69,7 +69,7 @@ export class BattleSim {
 
   startLevel(): void {
     const s = this.state;
-    s.enemies = []; s.summons = []; s.riders = []; s.spawnQueue = [];
+    s.enemies = []; s.summons = []; s.riders = []; s.flyers = []; s.spawnQueue = [];
     s.round = s.round + 1;
     s.roundTime = 0;
     s.levelTime = 0;
@@ -131,6 +131,7 @@ export class BattleSim {
     for (const e of s.enemies) if (e.alive) this.tickEnemy(e, dt);
     for (const sm of s.summons) if (sm.alive) this.tickSummon(sm, dt);
     this.tickRiders(dt);
+    this.tickFlyers(dt);
 
     // knockback decay + apply
     for (const u of this.allUnits()) {
@@ -412,11 +413,47 @@ export class BattleSim {
         }
         r.alive = false;
         r.crashed = true;
+        // person and car fly away, bouncing, dealing damage on contact
+        const dirs = [
+          { vx: 0, vy: 200 },
+          { vx: -170, vy: 130 },
+          { vx: 170, vy: 130 },
+        ];
+        const pd = dirs[this.rng.int(0, 2)];
+        const cd = dirs[this.rng.int(0, 2)];
+        s.flyers.push({ id: s.nextUnitId++, kind: "person", x: cx, y: cy, vx: pd.vx, vy: pd.vy, damage: 8, radius: 8, alive: true, hitIds: [], bounces: 0 });
+        s.flyers.push({ id: s.nextUnitId++, kind: "car", x: cx, y: cy, vx: cd.vx, vy: cd.vy, damage: 24, radius: 12, alive: true, hitIds: [], bounces: 0 });
         continue;
       }
       if (r.y < -20) r.alive = false;
     }
     s.riders = s.riders.filter((r) => r.alive);
+  }
+
+  private tickFlyers(dt: number): void {
+    const s = this.state;
+    const W = 180, H = 335, WALL = 12;
+    for (const f of s.flyers) {
+      if (!f.alive) continue;
+      f.x += f.vx * dt;
+      f.y += f.vy * dt;
+      if (f.x < WALL) { f.x = WALL; f.vx = Math.abs(f.vx); f.bounces++; }
+      if (f.x > W - WALL) { f.x = W - WALL; f.vx = -Math.abs(f.vx); f.bounces++; }
+      if (f.y > H - WALL) { f.y = H - WALL; f.vy = -Math.abs(f.vy); f.bounces++; }
+      for (const e of s.enemies) {
+        if (!e.alive) continue;
+        if (f.hitIds.includes(e.id)) continue;
+        if (Math.hypot(e.x - f.x, e.y - f.y) <= f.radius + e.radius) {
+          const res = applyDamage(e, f.damage, 1);
+          this.emit("flyer.hit", { flyerId: f.id, kind: f.kind, targetId: e.id, dmg: f.damage, killed: res.killed });
+          f.hitIds.push(e.id);
+          if (res.killed && e.side === "enemy") this.onEnemyKilled(e as EnemyUnit);
+        }
+      }
+      if (f.y < -20) f.alive = false;
+      if (f.bounces > 8) f.alive = false;
+    }
+    s.flyers = s.flyers.filter((f) => f.alive);
   }
 
   private separate(): void {

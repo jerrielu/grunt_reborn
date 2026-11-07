@@ -50,6 +50,20 @@ export interface EnemyUnit extends Unit {
   isBoss: boolean;
 }
 
+export interface FlyerUnit {
+  id: number;
+  kind: "person" | "car";
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  damage: number;
+  radius: number;
+  alive: boolean;
+  hitIds: number[];
+  bounces: number;
+}
+
 export interface RiderUnit {
   id: number;
   x: number;
@@ -116,6 +130,7 @@ export interface RunState {
   enemies: EnemyUnit[];
   summons: SummonUnit[];
   riders: RiderUnit[];
+  flyers: FlyerUnit[];
   deck: CardInstance[]; // owned cards (replayable)
   equipment: { weapon: string | null; armor: string | null; boots: string | null };
   buffs: Buff[]; // active tactic buffs
